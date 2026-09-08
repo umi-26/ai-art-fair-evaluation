@@ -1,0 +1,1641 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>에이블 AI 예술제 심사 시스템</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --paper:#f6f4ef; --surface:#fffdf8; --surface-2:#efece3;
+    --ink:#23272c; --ink-soft:#585c63; --ink-faint:#8a8d93;
+    --line:#ddd8ca; --line-strong:#c7c1af;
+    --accent:#2f6f6a; --accent-deep:#245854; --accent-soft:#e3ece9;
+    --gold:#9c7b3b; --gold-soft:#f1e8d6;
+    --pass:#3f7d54; --caution:#b07d2b; --fail:#a8443b;
+    --shadow:0 1px 2px rgba(40,38,30,.04), 0 6px 22px rgba(40,38,30,.07);
+    --gold-badge:#c8a04a; --silver-badge:#9aa0a6; --bronze-badge:#b07a4e;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#191c1f; --surface:#22262a; --surface-2:#2b3035;
+      --ink:#e8e5dc; --ink-soft:#a9abb1; --ink-faint:#7b7d83;
+      --line:#343a41; --line-strong:#474d55;
+      --accent:#5fa9a2; --accent-deep:#7cc0b8; --accent-soft:#223634;
+      --gold:#c9a35f; --gold-soft:#322b1c;
+      --pass:#6fb488; --caution:#d6a95c; --fail:#d47b70;
+      --shadow:0 1px 2px rgba(0,0,0,.22), 0 6px 24px rgba(0,0,0,.3);
+      --gold-badge:#d4af5a; --silver-badge:#b6bcc4; --bronze-badge:#c68e63;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#191c1f; --surface:#22262a; --surface-2:#2b3035;
+    --ink:#e8e5dc; --ink-soft:#a9abb1; --ink-faint:#7b7d83;
+    --line:#343a41; --line-strong:#474d55;
+    --accent:#5fa9a2; --accent-deep:#7cc0b8; --accent-soft:#223634;
+    --gold:#c9a35f; --gold-soft:#322b1c;
+    --pass:#6fb488; --caution:#d6a95c; --fail:#d47b70;
+    --shadow:0 1px 2px rgba(0,0,0,.22), 0 6px 24px rgba(0,0,0,.3);
+    --gold-badge:#d4af5a; --silver-badge:#b6bcc4; --bronze-badge:#c68e63;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.7;letter-spacing:-.005em}
+  h1,h2,h3,h4{font-family:"Gowun Batang","Nanum Myeongjo",serif;font-weight:700;line-height:1.3;text-wrap:balance;margin:0}
+  button{font-family:inherit}
+  a{color:var(--accent-deep)}
+
+  .bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.7rem clamp(.9rem,3vw,2rem)}
+  .bar .brand{display:flex;flex-direction:column;line-height:1.25;margin-right:auto}
+  .bar .brand b{font-family:"Gowun Batang",serif;font-size:1.05rem}
+  .bar .brand span{font-family:"IBM Plex Mono",monospace;font-size:.66rem;color:var(--ink-faint);letter-spacing:.02em}
+  .nav{display:flex;gap:.35rem;flex-wrap:wrap}
+  .nav button{border:1px solid transparent;background:transparent;color:var(--ink-soft);
+    padding:.4rem .8rem;border-radius:8px;font-size:.85rem;cursor:pointer}
+  .nav button:hover{background:var(--surface-2)}
+  .nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent-deep);font-weight:600}
+  .nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  main{max-width:1000px;margin:0 auto;padding:clamp(1.1rem,3vw,2.4rem) clamp(.9rem,3vw,2rem) 6rem}
+
+  .btn{display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;border-radius:9px;padding:.6rem 1.05rem;
+    font-size:.88rem;font-weight:500;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+  .btn:hover{border-color:var(--accent)}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:var(--accent-deep)}
+  .btn.ghost{background:transparent}
+  .btn.danger{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 45%,var(--line))}
+  .btn.sm{padding:.4rem .7rem;font-size:.8rem}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+
+  .dash-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem}
+  .dash-head h1{font-size:clamp(1.5rem,4vw,2rem)}
+  .dash-head p{margin:.3rem 0 0;color:var(--ink-soft);font-size:.9rem}
+
+  .actionbar{display:flex;gap:.55rem;flex-wrap:wrap;margin-bottom:1.4rem}
+  .progress{margin:0 0 1.6rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;box-shadow:var(--shadow)}
+  .progress .track{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin:.6rem 0 .5rem}
+  .progress .fill{height:100%;background:var(--accent);border-radius:999px;transition:width .3s}
+  .progress .legend{display:flex;gap:1.2rem;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace;font-size:.74rem;color:var(--ink-soft)}
+  .progress .legend b{color:var(--ink)}
+
+  .cards{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:1rem 1.1rem;box-shadow:var(--shadow);
+    cursor:pointer;display:flex;flex-direction:column;gap:.55rem;text-align:left}
+  .card:hover{border-color:var(--accent)}
+  .card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .card .top{display:flex;justify-content:space-between;gap:.5rem;align-items:baseline}
+  .card .no{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-faint)}
+  .card .thumb{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:var(--surface-2);border:1px solid var(--line)}
+  .card .thumb.ph{display:grid;place-items:center;color:var(--ink-faint);font-size:1.6rem}
+  .card .title{font-family:"Gowun Batang",serif;font-weight:700;font-size:1.02rem;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+  .score-big{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.2rem}
+  .score-big small{font-size:.7rem;color:var(--ink-faint)}
+
+  .pill{font-family:"IBM Plex Mono",monospace;font-size:.64rem;letter-spacing:.02em;padding:.16rem .5rem;border-radius:999px;white-space:nowrap}
+  .pill.draft{background:var(--surface-2);color:var(--ink-faint)}
+  .pill.auto{background:var(--gold-soft);color:var(--gold)}
+  .pill.done{background:var(--accent-soft);color:var(--accent-deep)}
+  .pill.hold{background:color-mix(in srgb,var(--caution) 22%,transparent);color:var(--caution)}
+  .needbadge{font-family:"IBM Plex Mono",monospace;font-size:.62rem;color:var(--caution);border:1px solid color-mix(in srgb,var(--caution) 40%,transparent);border-radius:999px;padding:.05rem .4rem}
+  .grade{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.8rem;padding:.1rem .5rem;border-radius:6px;border:1px solid var(--line-strong)}
+  .grade.S{color:var(--accent-deep);border-color:var(--accent)} .grade.A{color:var(--pass)} .grade.D{color:var(--fail)}
+
+  .empty{border:1.5px dashed var(--line-strong);border-radius:14px;padding:2.6rem 1.5rem;text-align:center;color:var(--ink-soft)}
+  .empty h3{font-size:1.15rem;margin-bottom:.4rem}
+
+  .ed-grid{display:grid;gap:1.4rem}
+  @media(min-width:920px){.ed-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.18fr)}}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.15rem 1.2rem;box-shadow:var(--shadow)}
+  .panel + .panel{margin-top:1.1rem}
+  .panel h3{font-size:1.03rem;margin-bottom:.85rem;padding-bottom:.5rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+  .panel h3 .mini{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--ink-faint);font-weight:400}
+
+  .drop{border:1.5px dashed var(--line-strong);border-radius:12px;padding:1.3rem;text-align:center;color:var(--ink-soft);cursor:pointer}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .drop .ic{font-size:1.7rem}
+  .drop b{display:block;color:var(--ink);margin:.3rem 0 .1rem}
+  .drop small{font-size:.75rem;color:var(--ink-faint)}
+  .preview{margin-top:.9rem}
+  .preview img{width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+  .preview .meta{font-family:"IBM Plex Mono",monospace;font-size:.71rem;color:var(--ink-soft);margin-top:.5rem;display:flex;gap:.9rem;flex-wrap:wrap}
+  .ok{color:var(--pass);font-size:.8rem;margin-top:.3rem}
+
+  label.f{display:block;margin-bottom:.85rem}
+  label.f .lb{display:block;font-family:"IBM Plex Mono",monospace;font-size:.65rem;letter-spacing:.05em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:.35rem}
+  input[type=text],textarea,select{width:100%;font:inherit;font-size:.9rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line-strong);border-radius:9px;padding:.55rem .7rem}
+  input[type=text]:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  textarea{resize:vertical;min-height:4.5rem;line-height:1.6}
+  .two{display:grid;gap:0 1rem;grid-template-columns:1fr 1fr}
+  .cnt{font-family:"IBM Plex Mono",monospace;font-size:.67rem;color:var(--ink-faint);text-align:right;margin-top:.2rem}
+
+  .metrics{display:grid;gap:.5rem;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:.4rem}
+  .metric{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:.55rem .7rem}
+  .metric .k{font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.04em}
+  .metric .v{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:.92rem;margin-top:.15rem}
+  .metric .v.warnv{color:var(--caution)} .metric .v.okv{color:var(--pass)}
+  .p7{display:grid;gap:.35rem;margin-top:.5rem}
+  .p7 .r{display:grid;grid-template-columns:6.5rem 1fr 2rem;gap:.5rem;align-items:center;font-size:.78rem}
+  .p7 .bar{height:7px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+  .p7 .bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+  .p7 .n{font-family:"IBM Plex Mono",monospace;text-align:right;color:var(--ink-soft)}
+
+  .crit{border:1px solid var(--line);border-radius:11px;margin-bottom:.75rem;overflow:hidden;background:var(--paper)}
+  .crit .ch{display:flex;align-items:center;gap:.6rem;padding:.65rem .8rem;flex-wrap:wrap}
+  .crit .cid{font-family:"Gowun Batang",serif;font-weight:700;color:var(--accent);font-size:1rem}
+  .crit .cname{font-weight:600;font-size:.88rem;flex:1;min-width:7rem}
+  .crit .cmax{font-family:"IBM Plex Mono",monospace;font-size:.68rem;color:var(--ink-faint)}
+  .crit .autotag{font-family:"IBM Plex Mono",monospace;font-size:.58rem;padding:.08rem .42rem;border-radius:999px;white-space:nowrap}
+  .crit .autotag.a{background:var(--accent-soft);color:var(--accent-deep)}
+  .crit .autotag.e{background:var(--gold-soft);color:var(--gold)}
+  .crit .autotag.ok{background:color-mix(in srgb,var(--pass) 16%,transparent);color:var(--pass)}
+  .crit .aic{font-size:.76rem;color:var(--ink-soft);line-height:1.55;padding:0 .8rem .55rem}
+  .crit .aic b{color:var(--accent-deep)}
+  .tiers{display:flex;gap:.4rem;padding:0 .8rem .55rem;flex-wrap:wrap}
+  .tiers button{flex:1;min-width:4.5rem;font:inherit;font-size:.8rem;cursor:pointer;padding:.4rem .3rem;border-radius:8px;
+    border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-soft)}
+  .tiers button .tl{font-family:"Gowun Batang",serif;font-weight:700;font-size:.95rem}
+  .tiers button .tn{font-family:"IBM Plex Mono",monospace;font-size:.7rem;margin-left:.3rem}
+  .tiers button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tiers button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .crit .sc{display:flex;align-items:center;gap:.5rem;padding:0 .8rem .6rem}
+  .crit .sc .adj{font:inherit;cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);border-radius:7px;width:1.9rem;height:1.9rem;color:var(--ink)}
+  .crit input[type=range]{flex:1;accent-color:var(--accent)}
+  .crit input[type=number]{width:3.4rem;font:inherit;font-family:"IBM Plex Mono",monospace;text-align:center;background:var(--gold-soft);
+    border:1px solid var(--line-strong);border-radius:7px;padding:.3rem;color:var(--ink)}
+  .crit .fineLb{font-family:"IBM Plex Mono",monospace;font-size:.6rem;color:var(--ink-faint)}
+  .crit details{border-top:1px dashed var(--line)}
+  .crit summary{cursor:pointer;list-style:none;font-size:.74rem;color:var(--ink-soft);padding:.45rem .8rem}
+  .crit summary::-webkit-details-marker{display:none}
+  .crit summary::before{content:"▸ ";color:var(--ink-faint)}
+  .crit details[open] summary::before{content:"▾ "}
+  .bandrow{display:grid;grid-template-columns:4.4rem 2.8rem 1fr;gap:.5rem;font-size:.76rem;padding:.38rem .8rem;border-top:1px solid var(--line);cursor:pointer}
+  .bandrow:hover{background:var(--accent-soft)}
+  .bandrow .r{font-family:"IBM Plex Mono",monospace;color:var(--accent-deep)}
+  .bandrow .t{font-weight:600}
+  .bandrow .d{color:var(--ink-soft);line-height:1.5}
+
+  .summary-box{position:sticky;bottom:0;background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;
+    padding:.85rem 1.05rem;margin-top:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+  .summary-box .tot{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.6rem}
+  .summary-box .tot small{font-size:.78rem;color:var(--ink-faint)}
+  .summary-box .gr{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1rem;padding:.2rem .65rem;border-radius:8px;border:1px solid var(--line-strong)}
+  .summary-box .sp{margin-left:auto;display:flex;gap:.55rem;flex-wrap:wrap}
+
+  .rank-head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  table{border-collapse:collapse;width:100%;min-width:660px;font-size:.85rem}
+  thead th{background:var(--surface-2);text-align:left;font-weight:600;padding:.6rem .75rem;border-bottom:1px solid var(--line-strong);white-space:nowrap;font-family:"IBM Plex Sans KR",sans-serif}
+  tbody td{padding:.55rem .75rem;border-bottom:1px solid var(--line);background:var(--surface);vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  .rk{font-family:"Gowun Batang",serif;font-weight:700;font-size:1.05rem;text-align:center;width:3rem}
+  .rk.m1{color:var(--gold-badge)} .rk.m2{color:var(--silver-badge)} .rk.m3{color:var(--bronze-badge)}
+  tbody tr.top td{background:color-mix(in srgb,var(--accent-soft) 55%,var(--surface))}
+  tbody tr.held td{background:color-mix(in srgb,var(--caution) 8%,var(--surface))}
+  td.n{font-family:"IBM Plex Mono",monospace;text-align:center}
+  .note{font-size:.82rem;color:var(--ink-soft);border-left:2px solid var(--gold);padding-left:.9rem;margin:1.1rem 0 0}
+  .infobox{background:var(--gold-soft);border:1px solid color-mix(in srgb,var(--gold) 30%,var(--line));border-radius:10px;padding:.7rem .9rem;font-size:.82rem;margin-bottom:1rem}
+
+  /* 결과지 */
+  .result-doc h1{font-size:clamp(1.5rem,4vw,2rem)}
+  .rsheet{background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;padding:1.3rem 1.4rem;margin:1.2rem 0;box-shadow:var(--shadow)}
+  .rsheet .rh{display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:.9rem;margin-bottom:.9rem}
+  .rsheet .rh .badge{font-family:"Gowun Batang",serif;font-weight:700;font-size:1.5rem;min-width:3rem}
+  .rsheet .rh .badge.m1{color:var(--gold-badge)} .rsheet .rh .badge.m2{color:var(--silver-badge)} .rsheet .rh .badge.m3{color:var(--bronze-badge)}
+  .rsheet .rh .meta{flex:1;min-width:10rem}
+  .rsheet .rh .meta .t{font-family:"Gowun Batang",serif;font-weight:700;font-size:1.15rem}
+  .rsheet .rh .meta .s{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--ink-soft);margin-top:.2rem}
+  .rsheet .rh .tot{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:1.5rem;text-align:right}
+  .rsheet .rh img{width:110px;height:82px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+  .rsheet .stab{width:100%;min-width:0;font-size:.8rem;margin:.5rem 0}
+  .rsheet .stab td,.rsheet .stab th{border:1px solid var(--line);padding:.4rem .55rem}
+  .rsheet .stab .cc{font-family:"IBM Plex Mono",monospace;text-align:center;white-space:nowrap}
+  .rsheet .vt{font-size:.85rem;margin-top:.6rem}
+  .rsheet .vt b{font-family:"Gowun Batang",serif}
+  .rsheet ul{margin:.3rem 0 .6rem;padding-left:1.1rem;font-size:.83rem}
+  .tchip{font-family:"IBM Plex Mono",monospace;font-size:.62rem;padding:.06rem .4rem;border-radius:999px;border:1px solid var(--line-strong)}
+  .tchip.high{color:var(--pass);border-color:color-mix(in srgb,var(--pass) 45%,var(--line))}
+  .tchip.mid{color:var(--caution);border-color:color-mix(in srgb,var(--caution) 45%,var(--line))}
+  .tchip.low{color:var(--fail);border-color:color-mix(in srgb,var(--fail) 45%,var(--line))}
+
+  .prose{max-width:660px}
+  .prose h1{font-size:1.6rem;margin-bottom:.8rem}
+  .prose h3{font-size:1.08rem;margin:1.7rem 0 .5rem}
+  .prose p{margin:.5rem 0} .prose ul{padding-left:1.1rem} .prose li{margin:.3rem 0}
+
+  .toast{position:fixed;left:50%;bottom:1.4rem;transform:translateX(-50%);background:var(--ink);color:var(--paper);
+    padding:.6rem 1.1rem;border-radius:10px;font-size:.85rem;box-shadow:var(--shadow);opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:60;max-width:90vw;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+  .modal-ov{position:fixed;inset:0;background:rgba(20,18,14,.5);display:grid;place-items:center;z-index:90;padding:1rem}
+  .modal-card{background:var(--surface);border:1px solid var(--line-strong);border-radius:14px;padding:1.4rem 1.5rem;max-width:26rem;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+  .modal-card p{margin:0 0 1.3rem;font-size:.92rem;line-height:1.65;color:var(--ink)}
+  .modal-btns{display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap}
+
+  /* 원문 & 근거 */
+  .origbox{display:grid;gap:.7rem}
+  .origbox .ob{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:.6rem .75rem}
+  .origbox .ob .k{font-family:"IBM Plex Mono",monospace;font-size:.62rem;letter-spacing:.05em;color:var(--ink-faint);text-transform:uppercase;margin-bottom:.3rem}
+  .origbox .ob .t{font-size:.87rem;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:11rem;overflow:auto}
+  .origbox .ob .t:empty::after{content:"(미입력)";color:var(--ink-faint)}
+  mark{background:color-mix(in srgb,var(--accent) 24%,transparent);color:inherit;border-radius:3px;padding:0 .1em}
+  .chipset{display:flex;flex-wrap:wrap;gap:.35rem;margin:.35rem 0}
+  .chipk{font-size:.75rem;color:var(--ink-soft);margin-right:.2rem}
+  .kchip{font-family:"IBM Plex Mono",monospace;font-size:.68rem;background:var(--accent-soft);color:var(--accent-deep);border-radius:999px;padding:.1rem .5rem}
+  .kchip.miss{background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--caution)}
+  .evtable{width:100%;min-width:0;font-size:.78rem;border-collapse:collapse;margin:.4rem 0}
+  .evtable td{border:1px solid var(--line);padding:.35rem .5rem;vertical-align:top}
+  .evtable td.k{font-family:"IBM Plex Mono",monospace;white-space:nowrap;width:6.5rem}
+  .evtable td.s{font-family:"IBM Plex Mono",monospace;white-space:nowrap;width:3.2rem;text-align:center;color:var(--accent-deep)}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media print{
+    .bar,.nav,.summary-box,.btn,.no-print,.actionbar{display:none!important}
+    body{background:#fff;color:#000} main{max-width:none;padding:0}
+    .tw,.panel,.rsheet{box-shadow:none;border-color:#999}
+    .rsheet{page-break-inside:avoid;margin:0 0 14px}
+    .rsheet details{display:block!important}
+    .rsheet details > *{display:block!important}
+    .rsheet details summary{display:none!important}
+    .origbox .ob .t{max-height:none!important;overflow:visible!important}
+    tbody tr.top td,tbody tr.held td{background:#f2f2f2!important}
+    mark{background:#e8e8e8!important;color:#000!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="brand">
+    <b>에이블 AI 예술제 · 심사 시스템</b>
+    <span>「나의 꿈 아트페어 예술제」 &nbsp;/&nbsp; 심사일 2026-09-10 &nbsp;/&nbsp; 반자동 채점 &nbsp;/&nbsp; v6</span>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-view="dashboard">대시보드</button>
+    <button data-view="ranking">순위</button>
+    <button data-view="result">결과지</button>
+    <button data-view="help">채점 방식</button>
+  </nav>
+</div>
+
+<main id="view" aria-live="polite"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* =========================================================================
+   에이블 AI 예술제 심사 시스템 — 단일 파일 · 반자동 채점
+   · 이미 적격성 심사를 통과한 23점을 대상으로 A~F 100점 채점 → 1~3위 + 입선 20 선발
+   · 프롬프트 문장·이미지를 브라우저에서 분석: D(프롬프트 역량)·F(규정)는 자동,
+     A·B·C·E는 AI가 상/중/하로 1차 판단 → 심사위원이 상/중/하 선택 + 미세 점수 조정
+   · 순위·판단문·결과지 자동 생성. AI API 호출 없음. 데이터는 이 브라우저에만 저장.
+   ========================================================================= */
+
+const CRITERIA = [
+  { id:"A", name:"주제 표현력 「나의 꿈」", max:25, mode:"tier",
+    hint:"꿈이라는 주제가 분명하고 설득력 있게 시각화됐는가. 설명글과 이미지가 하나의 이야기를 이루는가.",
+    bands:[
+      {r:"20–25",t:"상",d:"꿈의 주제가 강렬하게 전달되고 설명과 이미지가 하나의 이야기로 통합됨."},
+      {r:"13–19",t:"중",d:"주제가 드러나지만 표현이 일반적이거나 설명 의존적."},
+      {r:"0–12",t:"하",d:"주제 연관이 약하거나 「나의 꿈」과의 연결을 찾기 어려움."},
+    ]},
+  { id:"B", name:"창의성·독창성", max:20, mode:"tier",
+    hint:"흔한 클리셰(무지개·별·구름·사다리)를 넘어선 자기만의 해석·상징이 있는가.",
+    bands:[
+      {r:"16–20",t:"상",d:"흔한 상징을 넘어선 자기만의 발상·은유가 뚜렷하고 개성이 있음."},
+      {r:"9–15",t:"중",d:"익숙한 소재지만 새로운 조합·관점이 일부 보임."},
+      {r:"0–8",t:"하",d:"상투적이고 차별점이 약함."},
+    ]},
+  { id:"C", name:"조형적 완성도·시각적 품질", max:20, mode:"tier",
+    hint:"선명도·해상도·노출은 자동 측정. 구도·색채 조화는 이미지를 보고 판단.",
+    bands:[
+      {r:"16–20",t:"상",d:"구도·색채가 조화롭고 선명도·해상도가 우수하며 왜곡·아티팩트가 없음."},
+      {r:"9–15",t:"중",d:"전반적으로 무난하나 구도·색 균형 또는 해상도·디테일에 아쉬움."},
+      {r:"0–8",t:"하",d:"초점 흐림·노이즈·형태 왜곡이 두드러지거나 미완성."},
+    ]},
+  { id:"D", name:"프롬프트 역량", max:15, mode:"auto",
+    hint:"프롬프트 문장을 자동 분석 — 구체성·시각적 표현 지시·구조·스타일 명확성.",
+    bands:[
+      {r:"12–15",t:"상",d:"대상·상황·배경·분위기·스타일을 구체적으로 지시하고 논리적 순서로 구성됨."},
+      {r:"7–11",t:"중",d:"핵심 요소를 지시했으나 구도·스타일 등 일부가 부족."},
+      {r:"0–6",t:"하",d:"한두 단어 수준이거나 시각적 지시가 거의 없음."},
+    ]},
+  { id:"E", name:"이미지–프롬프트–설명 일치도", max:15, mode:"tier",
+    hint:"프롬프트·설명의 충실도로 1차값을 잡되, 실제 이미지 대조는 심사위원이 확인.",
+    bands:[
+      {r:"12–15",t:"상",d:"프롬프트·설명의 주요 요소가 이미지에 대부분 구현됨."},
+      {r:"7–11",t:"중",d:"절반가량 일치하고 프롬프트와 결과의 간극이 보임."},
+      {r:"0–6",t:"하",d:"핵심 요소 다수가 이미지에 없음."},
+    ]},
+  { id:"F", name:"규정 준수·윤리성", max:5, mode:"auto",
+    hint:"제출 형식(이미지/원본)·해상도는 선택 사항 → 기본 미반영, 5점에서 시작. 도용·부적절 콘텐츠가 확인되면 수동 감점. (대시보드 설정에서 규격 반영을 켤 수 있음)",
+    bands:[
+      {r:"5",t:"완전",d:"독창성·윤리 이슈 없음. (규격 반영 설정 시: 형식·300dpi 충족)"},
+      {r:"3–4",t:"경미",d:"경미한 이슈, 또는 규격 반영 설정 시 해상도 권장치 미달."},
+      {r:"0–2",t:"주의",d:"타 저작물 도용 정황 / 부적절 요소 → 회의 안건."},
+    ]},
+];
+const MAX_TOTAL = CRITERIA.reduce((s,c)=>s+c.max,0);
+const TIER_IDS = CRITERIA.filter(c=>c.mode==="tier").map(c=>c.id); // A,B,C,E
+const TIERS = { high:{label:"상"}, mid:{label:"중"}, low:{label:"하"} };
+function tierRep(c, tier){ const f = tier==="high"?0.82 : tier==="mid"?0.58 : 0.30; return Math.round(c.max*f); }
+function tierFromValue(c, v){ if(v==null) return "mid"; const r=v/c.max; return r>=0.7?"high":r>=0.45?"mid":"low"; }
+
+const GRADES = [
+  {g:"S",min:90,label:"전문가 수준"},{g:"A",min:80,label:"매우 우수"},{g:"B",min:70,label:"우수"},
+  {g:"C",min:60,label:"보완 필요"},{g:"D",min:0,label:"재작업 권장"},
+];
+function gradeOf(t){ return GRADES.find(x=>t>=x.min); }
+
+/* =========================================================================
+   프롬프트 분석 사전
+   ========================================================================= */
+const DICT = {
+  subject:["나","내 모습","자화상","사람","인물","소년","소녀","아이","어린이","학생","청년","여자","남자","할머니","할아버지",
+    "우주비행사","비행사","화가","예술가","의사","간호사","선생님","무용수","발레","운동선수","가수","요리사","과학자","선장","조종사",
+    "동물","강아지","고양이","새","나비","말","사슴","고래","나무","꽃","집","마을","도시","로봇","천사",
+    "person","people","man","woman","girl","boy","child","kid","student","portrait","self-portrait","astronaut","artist","painter",
+    "doctor","nurse","teacher","dancer","ballerina","athlete","singer","chef","scientist","pilot","character","figure","animal","dog","cat","bird"],
+  scene:["배경","풍경","하늘","밤하늘","별밤","구름","바다","해변","파도","호수","강","숲","나무숲","들판","초원","산","언덕","사막","우주","은하",
+    "도시","거리","골목","광장","무대","교실","학교","병원","도서관","작업실","방","집안","정원","공원","놀이터","기차역","공항","다리","등대",
+    "background","landscape","scenery","sky","night sky","clouds","sea","ocean","beach","wave","lake","river","forest","woods","field","meadow",
+    "mountain","hill","desert","space","galaxy","city","street","alley","square","stage","classroom","school","hospital","library","studio",
+    "room","garden","park","playground","station","airport","bridge","lighthouse","indoor","outdoor"],
+  action:["서 있","서있","걷","달리","뛰","날","날아","춤","그리","바라보","올려다","내려다","앉아","앉은","웃","미소","손을 들","팔을 벌",
+    "노래","연주","달려가","향해","도약","점프","안고","들고","standing","walking","running","flying","floating","dancing","painting",
+    "drawing","looking","gazing","sitting","smiling","laughing","reaching","raising","spreading arms","singing","playing","jumping","leaping","holding","carrying"],
+  colorLight:["색","색감","색상","컬러","파란","파랑","빨간","빨강","노란","노랑","초록","보라","분홍","주황","금색","은색","무지개색","파스텔",
+    "따뜻한 색","차가운 색","빛","조명","햇빛","햇살","노을","석양","일출","여명","달빛","네온","형광","역광","은은한 빛","부드러운 빛","그림자","명암","대비",
+    "밝은","어두운","화사","선명한 색","은은","채도","color","colour","blue","red","yellow","green","purple","pink","orange","golden","gold","silver",
+    "pastel","warm color","cool color","light","lighting","sunlight","sunshine","sunset","sunrise","dawn","dusk","moonlight","neon","glow","glowing",
+    "backlight","rim light","soft light","soft lighting","shadow","contrast","bright","dark","vivid","vibrant","muted","saturation"],
+  mood:["분위기","느낌","무드","몽환","환상적","꿈같","희망찬","희망","따뜻한 분위기","포근","평화로운","평화","고요","차분","신비","신비로운",
+    "활기","생동감","벅찬","설레","뭉클","경이","자유로운","자유","외로운","쓸쓸","그리운","향수","밤","낮","새벽","아침","저녁","황혼",
+    "비 오는","빗속","눈 오는","눈 내리는","안개","안개 낀","맑은 날","흐린 날",
+    "mood","atmosphere","atmospheric","dreamy","dreamlike","surreal","ethereal","hopeful","warm","cozy","peaceful","calm","serene","tranquil",
+    "mysterious","mystical","lively","dynamic","uplifting","touching","awe","free","freedom","lonely","melancholic","nostalgic","nostalgia",
+    "night","day","daytime","dawn","morning","evening","twilight","rainy","in the rain","snowy","fog","foggy","misty","mist","clear sky","overcast"],
+  camera:["구도","앵글","시점","정면","측면","뒷모습","위에서","부감","조감","아래에서","앙각","눈높이","클로즈업","근접","전신","상반신","반신",
+    "원경","근경","광각","망원","어안","프레임","구성","중앙 배치","삼분할","여백","심도","아웃포커스","보케","얕은 심도","깊은 심도","초점","렌즈",
+    "composition","angle","viewpoint","point of view","pov","front view","side view","back view","bird's eye","birds eye","top down","overhead",
+    "low angle","high angle","eye level","close-up","closeup","close up","full body","full shot","upper body","half body","wide shot","wide angle",
+    "telephoto","fisheye","frame","framing","centered","rule of thirds","negative space","depth of field","bokeh","shallow depth","deep focus",
+    "focus","sharp focus","lens","35mm","50mm","85mm","focal length"],
+  style:["스타일","화풍","기법","사실적","실사","포토리얼","극사실","반실사","수채화","유화","아크릴화","파스텔화","색연필","크레용","펜화","스케치",
+    "판화","동양화","수묵화","민화","팝아트","초현실주의","인상주의","디지털 아트","디지털아트","일러스트","일러스트레이션","애니메이션풍","애니풍","애니메","만화풍",
+    "3d 렌더","3d","저폴리","픽셀아트","지브리","지브리풍","픽사","디즈니풍","미니멀","빈티지","레트로","콜라주","컨셉아트",
+    "style","art style","cinematic","photorealistic","photo-realistic","hyperrealistic","realistic","semi-realistic","watercolor","watercolour",
+    "oil painting","acrylic","pastel drawing","colored pencil","crayon","ink drawing","sketch","printmaking","ink wash","folk art","pop art",
+    "surrealism","surrealist","impressionism","impressionist","digital art","digital painting","illustration","illustrated","anime","anime style",
+    "cartoon","comic","3d render","3d","low poly","pixel art","ghibli","studio ghibli","pixar","disney style","minimalist","vintage","retro","collage","concept art"],
+  quality:["고화질","고해상도","초고해상도","선명","디테일","정교","섬세","4k","8k","hd","uhd","마스터피스","최고 품질","고퀄",
+    "high quality","best quality","highly detailed","ultra detailed","intricate detail","sharp","sharp focus","high resolution","hi-res","masterpiece","photorealism"],
+  dream:["꿈","꿈꾸","되고 싶","되고싶","장래","장래희망","희망","소망","바람","이루고 싶","이루고싶","목표","미래","훗날","언젠가","커서",
+    "dream","dreams","dreaming","aspiration","aspire","hope to","want to be","wish to be","future","someday","one day","goal","when i grow up"],
+  cliche:["무지개","별","별빛","별똥별","구름","사다리","날개","천사날개","풍선","새싹","떡잎","해바라기","지구본","지구","전구","반짝이",
+    "rainbow","star","stars","shooting star","cloud","clouds","ladder","wings","angel wings","balloon","balloons","sprout","seedling","sunflower","globe","light bulb","lightbulb","sparkle"],
+  personal:["나는","내가","저는","제가","어릴","어렸을","어릴 적","우리","엄마","아빠","가족","친구","할머니","할아버지","because","when i","i was","i want","i wish","my family","my mom","my dad"],
+};
+function termHit(text, term){
+  if(/^[\x00-\x7f]+$/.test(term)){
+    const e = term.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    return new RegExp("(^|[^a-z0-9])"+e+"([^a-z0-9]|$)","i").test(text);
+  }
+  return text.indexOf(term)!==-1;
+}
+function hits(text, arr){ const low=(text||"").toLowerCase(); const out=[]; for(const t of arr){ if(termHit(low,t.toLowerCase())) out.push(t); } return out; }
+const clamp01 = x => Math.max(0,Math.min(1,x));
+const clampN = (x,lo,hi) => Math.max(lo,Math.min(hi,x));
+
+function analyzePrompt(text){
+  const t=(text||"").trim(), low=t.toLowerCase(), B={};
+  for(const k of ["subject","scene","action","colorLight","mood","camera","style","quality"]) B[k]=hits(low,DICT[k]);
+  const words=(t.match(/[가-힣]+|[a-zA-Z]+/g)||[]).length;
+  const clauses=t.split(/[,\n·;/]|그리고|와 함께/).map(s=>s.trim()).filter(Boolean).length;
+  let firstStyle=1, subjectEarly=1;
+  [...DICT.style,...DICT.quality].forEach(k=>{ const i=low.indexOf(k.toLowerCase()); if(i>=0) firstStyle=Math.min(firstStyle,i/Math.max(1,low.length)); });
+  DICT.subject.forEach(k=>{ const i=low.indexOf(k.toLowerCase()); if(i>=0) subjectEarly=Math.min(subjectEarly,i/Math.max(1,low.length)); });
+  const ordered = subjectEarly<0.5 && firstStyle>0.4;
+  const specificity=clamp01((B.subject.length?0.45:0.05)+(B.scene.length?0.33:0)+(B.action.length?0.2:0)+Math.min(0.2,words/200));
+  const visual=clamp01(Math.min(1,B.colorLight.length*0.16+B.camera.length*0.16+B.mood.length*0.12+B.style.length*0.12));
+  const style=clamp01(Math.min(1,B.style.length*0.55+B.quality.length*0.2));
+  const structure=clamp01((clauses>=4?0.45:clauses>=2?0.28:clauses*0.12)+Math.min(0.3,words/70)+(ordered?0.2:0));
+  const p7={
+    "구체성":Math.round(specificity*4),
+    "시각적 표현력":Math.round(clamp01((B.colorLight.length+B.camera.length+B.style.length)/6)*4),
+    "이미지 일치도":null,
+    "스타일 명확성":Math.round(style*4),
+    "구도·카메라":Math.round(clamp01(B.camera.length/3)*4),
+    "분위기·감성":Math.round(clamp01(B.mood.length/3)*4),
+    "프롬프트 구조":Math.round(structure*4),
+  };
+  return { buckets:B, words, clauses, specificity, visual, style, structure, p7 };
+}
+function scoreD(pa){ return clampN(Math.round(pa.specificity*5 + pa.visual*4 + pa.structure*3 + pa.style*3), 0, 15); }
+function scoreF(m, sett){
+  // 제출 형식(이미지/원본)·해상도는 선택 사항 → 기본적으로 점수 미반영, 만점에서 시작.
+  // 도용·부적절 콘텐츠가 확인되면 심사위원이 수동으로 낮춥니다.
+  if(!sett || !sett.scoreFormat) return 5;
+  if(!m) return 2;
+  let f = (m.formatOk?3:1) + (m.longSide>=2300?2 : m.longSide>=1600?1.4 : m.longSide>=1000?0.9 : 0.4);
+  return clampN(Math.round(f), 0, 5);
+}
+
+/* ---------- AI 1차 판단 (상/중/하 + 근거) ---------- */
+function aiJudge(en, pa){
+  const B = pa.buckets;
+  const desc = (en.desc||"").trim();
+  const theme = (en.theme||"").trim();
+  const text = ((en.prompt||"")+" "+desc+" "+theme).toLowerCase();
+  const m = en.imgMetrics;
+  const diversity = ["subject","scene","action","colorLight","mood","camera","style"].reduce((s,k)=>s+(B[k].length?1:0),0);
+  const R = {};
+
+  // A 주제 표현력
+  {
+    const dh = hits(text, DICT.dream);
+    const themeHasDream = hits((theme).toLowerCase(), DICT.dream).length>0 || /꿈/.test(theme);
+    let p = (dh.length?2:0) + (themeHasDream?0.6:0) + (desc.length>=120?2:desc.length>=50?1:0)
+          + (B.subject.length&&B.scene.length?1.5:(B.subject.length?0.7:0)) + (B.action.length?0.5:0);
+    const tier = p>=4 ? "high" : p>=2.2 ? "mid" : "low";
+    const bits=[];
+    bits.push(dh.length ? `주제·설명·프롬프트에 '${dh.slice(0,3).join("', '")}' 등 장래·소망 표현이 있음` : "'꿈'과의 직접적 연결 표현이 약함");
+    if(theme) bits.push(`작품 주제 "${theme}"`);
+    bits.push(desc.length>=120 ? "작품 설명이 구체적으로 서술됨" : desc.length<50 ? "작품 설명이 짧아 이야기 전달이 부족" : "작품 설명이 어느 정도 뒷받침됨");
+    if(B.subject.length&&B.scene.length) bits.push("인물과 배경이 주제와 연결됨");
+    R.A = { tier, comment: bits.join(" · "), matched:{ dream:dh } };
+  }
+  // B 창의성
+  {
+    const ch = hits(text, DICT.cliche);
+    const ph = hits(text, DICT.personal);
+    const personal = ph.length>0;
+    let p = 2.2 - Math.min(2, ch.length*0.8) + (personal?0.9:0) + (diversity>=6?0.9:diversity>=4?0.4:0) + (B.style.length>=2?0.4:0);
+    const tier = p>=3.4 ? "high" : p>=2 ? "mid" : "low";
+    const bits=[];
+    bits.push(ch.length>=2 ? `'${ch.slice(0,3).join("', '")}' 등 흔한 상징이 ${ch.length}회 사용됨` : ch.length ? `일반적 상징 '${ch[0]}' 사용` : "전형적 상징에 크게 기대지 않음");
+    bits.push(personal ? `개인적 서사·경험 표현 ('${ph.slice(0,2).join("', '")}')` : "자기만의 관점 표현이 약함");
+    if(diversity>=6) bits.push("표현 요소가 다양함");
+    R.B = { tier, comment: bits.join(" · "), matched:{ cliche:ch, personal:ph } };
+  }
+  // C 완성도  (해상도·형식은 선택 사항이므로 기본 미반영, 선명도·노출은 실제 화질 신호이므로 반영)
+  {
+    const useFmt = !!(state.settings && state.settings.scoreFormat);
+    let p=2; const bits=[];
+    if(m){
+      p = (m.sharpNorm>=0.66?1.7:m.sharpNorm>=0.45?1.1:0.4)
+        + ((m.clipFrac<0.08&&m.contrastNorm>=0.4)?1.0:0.4)
+        + (useFmt ? (m.resolutionScore>=0.9?1.4:m.resolutionScore>=0.6?0.9:0.3) : 0.9);
+      bits.push(`선명도 ${Math.round(m.sharpNorm*100)}%`);
+      bits.push(useFmt ? `해상도 ${m.longSide}px(~${m.approxDpiA4}dpi)` : `해상도 ${m.longSide}px(점수 미반영)`);
+      if(m.clipFrac>=0.08) bits.push("일부 노출 과다/과소");
+    } else bits.push("이미지 지표 없음");
+    const tier = p>=3.4 ? "high" : p>=2 ? "mid" : "low";
+    bits.push("구도·색채 조화는 육안 확인");
+    R.C = { tier, comment: bits.join(" · ") };
+  }
+  // E 일치도
+  {
+    let p = 1 + Math.min(2, diversity*0.35) + (desc.length>60?0.6:0);
+    const tier = p>=3.4 ? "high" : p>=2.2 ? "mid" : "low";
+    R.E = { tier, comment: `프롬프트가 ${diversity}개 시각 요소를 담음, 설명 ${desc.length}자 · 실제 이미지 반영 여부는 대조 확인 필요` };
+  }
+  return R;
+}
+
+/* ---------- 분석 근거 (원문 + 감지 요소 + 점수 계산 과정) ---------- */
+const BUCKET_KO = { subject:"대상·인물", scene:"배경·장소", action:"행동·동작", colorLight:"색·조명",
+  mood:"분위기·감성", camera:"구도·카메라", style:"스타일·화풍", quality:"품질·해상도" };
+function buildEvidence(en, pa, m){
+  const B = pa.buckets;
+  const detected = {}, missing = [];
+  for(const k of ["subject","scene","action","colorLight","mood","camera","style","quality"]){
+    if(B[k] && B[k].length) detected[k] = [...new Set(B[k])];
+    else if(k!=="quality") missing.push(BUCKET_KO[k]);
+  }
+  const dPart = {
+    "구체성": { got: +(pa.specificity*5).toFixed(1), max:5,
+      why: `대상 ${B.subject.length?"○":"×"} · 배경 ${B.scene.length?"○":"×"} · 행동 ${B.action.length?"○":"×"} · 분량 ${pa.words}단어` },
+    "시각적 표현 지시": { got:+(pa.visual*4).toFixed(1), max:4,
+      why:`색·조명 ${B.colorLight.length}개 · 구도 ${B.camera.length}개 · 분위기 ${B.mood.length}개 · 스타일 ${B.style.length}개` },
+    "프롬프트 구조": { got:+(pa.structure*3).toFixed(1), max:3, why:`구·절 ${pa.clauses}개 · 순서 ${pa.ordered?"주제→…→스타일 순 근접":"뒤섞임"}` },
+    "스타일 명확성": { got:+(pa.style*3).toFixed(1), max:3, why:`스타일 키워드 ${B.style.length}개 · 품질 키워드 ${B.quality.length}개` },
+  };
+  const useFmt = !!(state.settings && state.settings.scoreFormat);
+  const fPart = !useFmt
+    ? `제출 형식(이미지/원본)·해상도는 선택 사항 → 점수 미반영, F는 5점에서 시작. 도용·부적절 시 수동 감점. ${m?`(참고: ${m.formatOk?"JPG/PNG":"규격 외"}, ${m.longSide}px)`:""}`
+    : (m ? `파일 형식 ${m.formatOk?"JPG/PNG ○":"규격 외 ×"} · 해상도 ${m.longSide}px(약 ${m.approxDpiA4}dpi, 300dpi 기준 ${m.longSide>=2300?"충족":"미달"})` : "이미지 미분석");
+  const cPart = m
+    ? `선명도 ${Math.round(m.sharpNorm*100)}% · 대비 ${Math.round(m.contrastNorm*100)}% · 밝기 클리핑 ${Math.round(m.clipFrac*100)}%` + (useFmt?` · 해상도 점수 ${Math.round(m.resolutionScore*100)}%`:` · 해상도 ${m.longSide}px(미반영)`)
+    : "이미지 미분석";
+  return { detected, missing, dPart, fPart, cPart };
+}
+
+/* 원문에서 감지 키워드 강조 */
+function highlightText(text, terms){
+  let html = esc(text||"");
+  const uniq = [...new Set((terms||[]).filter(Boolean))].sort((a,b)=>b.length-a.length);
+  for(const t of uniq){
+    const et = esc(t).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    let re;
+    try{ re = /^[\x00-\x7f]+$/.test(t) ? new RegExp("(?<![A-Za-z0-9])("+et+")(?![A-Za-z0-9])","gi") : new RegExp("("+et+")","g"); }
+    catch(e){ re = new RegExp("("+et+")","g"); }
+    html = html.replace(re, (mm, g, off, full)=>{
+      const before = full.slice(0, off);
+      if(((before.match(/<mark/g)||[]).length) > ((before.match(/<\/mark>/g)||[]).length)) return mm;
+      return "<mark>"+g+"</mark>";
+    });
+  }
+  return html.replace(/\n/g,"<br>");
+}
+function allMatchedTerms(en){
+  const B = (en.pa&&en.pa.buckets)||{};
+  const arr = [];
+  for(const k in B) if(Array.isArray(B[k])) arr.push(...B[k]);
+  const J = en.aiJudge||{};
+  if(J.A&&J.A.matched) arr.push(...(J.A.matched.dream||[]));
+  if(J.B&&J.B.matched){ arr.push(...(J.B.matched.cliche||[])); arr.push(...(J.B.matched.personal||[])); }
+  return arr;
+}
+
+function recomputeAuto(en){
+  const pa = analyzePrompt(en.prompt||"");
+  const m = en.imgMetrics || null;
+  const J = aiJudge(en, pa);
+  en.pa = { buckets:pa.buckets, p7:pa.p7, words:pa.words };
+  en.aiJudge = J;
+  en.evidence = buildEvidence(en, pa, m);
+  en.tier = en.tier || {};
+  const auto = { D: scoreD(pa), F: scoreF(m, state.settings) };
+  TIER_IDS.forEach(id=>{
+    const c = CRITERIA.find(x=>x.id===id);
+    if(!en.confirmed[id]) en.tier[id] = J[id].tier;
+    auto[id] = tierRep(c, en.tier[id] || J[id].tier);
+  });
+  en.auto = auto;
+  CRITERIA.forEach(c=>{ if(!en.confirmed[c.id]) en.scores[c.id] = auto[c.id]; });
+  en.confirmed.D = true; en.confirmed.F = true;
+  en.verdict = buildVerdict(en, pa, m);
+  if(en.status==="draft") en.status = "auto";
+  en.updatedAt = Date.now();
+}
+
+function buildVerdict(en, pa, m){
+  const B = pa.buckets, s = en.scores, good=[], improve=[];
+  if(B.subject.length && B.scene.length) good.push(`프롬프트에 대상·배경이 함께 제시됨 (${[...B.subject.slice(0,2),...B.scene.slice(0,2)].join(", ")})`);
+  else if(B.subject.length) good.push(`대상이 명확히 지시됨 (${B.subject.slice(0,2).join(", ")})`);
+  if(B.colorLight.length) good.push(`색·조명 표현이 있음 (${B.colorLight.slice(0,3).join(", ")})`);
+  if(B.mood.length) good.push(`분위기·감성 묘사가 있음 (${B.mood.slice(0,3).join(", ")})`);
+  if(B.style.length) good.push(`스타일(화풍) 지정이 있음 (${B.style.slice(0,2).join(", ")})`);
+  if(B.camera.length) good.push(`구도·카메라 지시가 있음 (${B.camera.slice(0,2).join(", ")})`);
+  if(m && m.longSide>=2400) good.push(`이미지 해상도 약 ${m.longSide}px — A4 300dpi 기준 충족`);
+  if(m && m.sharpNorm>=0.66) good.push("이미지가 전반적으로 선명함");
+
+  if(!B.camera.length) improve.push("카메라 앵글·샷 크기·시점 지시가 없음");
+  if(!B.style.length) improve.push("원하는 스타일(사실적/수채화/애니 등) 지정이 없음");
+  if(!B.colorLight.length) improve.push("색감·조명에 대한 설명이 없음");
+  if(!B.mood.length) improve.push("분위기·감성(시간대·날씨·색조) 묘사가 없음");
+  if((en.prompt||"").trim().length<25) improve.push("프롬프트가 짧아 의도를 충분히 담지 못함");
+  if(m && m.sharpNorm<0.4) improve.push("이미지 선명도가 낮음 — 초점 흐림 또는 저해상도 가능");
+  if(m && m.longSide<1500) improve.push(`이미지 해상도가 낮음 (약 ${m.longSide}px, 300dpi 권장 미달)`);
+  if(m && !m.formatOk) improve.push("파일 형식이 JPG/PNG 규격과 다를 수 있음 — 원본 확인");
+  if(!improve.length){
+    improve.push("이미지가 프롬프트·설명을 실제로 반영했는지 육안 대조 (E)");
+    improve.push("발상의 독창성(B)·구도·색채 조화(C) 최종 확인 권장");
+  }
+  while(good.length<3) good.push("—");
+
+  const total = totalOf(en), gr = gradeOf(total);
+  const J = en.aiJudge || {};
+  const summary =
+    `종합 ${total}점 · ${gr.g}급(${gr.label}). ` +
+    `자동 채점 D(프롬프트 역량) ${s.D}/15, F(규정) ${s.F}/5. ` +
+    `AI 1차 판단 — 주제 표현 A: ${TIERS[en.tier.A]?.label||"?"} (${J.A?J.A.comment:""}). ` +
+    `창의성 B: ${TIERS[en.tier.B]?.label||"?"} (${J.B?J.B.comment:""}). ` +
+    `완성도 C: ${TIERS[en.tier.C]?.label||"?"}, 일치도 E: ${TIERS[en.tier.E]?.label||"?"}. ` +
+    `A·B·C·E는 심사위원이 상/중/하 확정 및 점수 조정 필요.`;
+  return { summary, good:good.slice(0,5), improve:improve.slice(0,5), generatedAt:Date.now() };
+}
+
+/* =========================================================================
+   이미지 자동 분석
+   ========================================================================= */
+function analyzeImage(dataUrl, origW, origH, origType){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const W = origW || img.naturalWidth, H = origH || img.naturalHeight;
+      const S = 480, sc = Math.min(1, S/Math.max(img.naturalWidth||1, img.naturalHeight||1));
+      const w = Math.max(2, Math.round((img.naturalWidth||S)*sc));
+      const h = Math.max(2, Math.round((img.naturalHeight||S)*sc));
+      const cv = document.createElement("canvas"); cv.width=w; cv.height=h;
+      const ctx = cv.getContext("2d"); ctx.drawImage(img,0,0,w,h);
+      let d; try{ d = ctx.getImageData(0,0,w,h).data; }catch(e){ resolve(fallbackMetrics(W,H,origType)); return; }
+      const g = new Float64Array(w*h);
+      let clip=0, satSum=0, px=0;
+      for(let i=0,p=0;i<d.length;i+=4,p++){
+        const r=d[i], gg=d[i+1], b=d[i+2];
+        g[p]=0.299*r+0.587*gg+0.114*b;
+        const mx=Math.max(r,gg,b), mn=Math.min(r,gg,b);
+        satSum += mx===0?0:(mx-mn)/mx;
+        if(g[p]<6||g[p]>249) clip++; px++;
+      }
+      let gMean=0; for(let p=0;p<g.length;p++) gMean+=g[p]; gMean/=g.length;
+      let gVar=0; for(let p=0;p<g.length;p++){ const dv=g[p]-gMean; gVar+=dv*dv; } gVar/=g.length;
+      let lSum=0,lSum2=0,lN=0,edges=0;
+      for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+        const idx=y*w+x;
+        const lap = -4*g[idx]+g[idx-1]+g[idx+1]+g[idx-w]+g[idx+w];
+        lSum+=lap; lSum2+=lap*lap; lN++;
+        if(Math.abs(lap)>12) edges++;
+      }
+      const lMean=lSum/lN, lapVar=lSum2/lN-lMean*lMean;
+      const longSide=Math.max(W,H);
+      resolve({
+        W,H,longSide,
+        sharpNorm: clamp01((Math.log10(lapVar+1)-1.25)/(2.75-1.25)),
+        edgeNorm: clamp01((edges/lN)/0.14),
+        contrastNorm: clamp01(Math.sqrt(gVar)/70),
+        clipFrac: clamp01(clip/px),
+        meanSat: satSum/px,
+        satReasonable: clamp01(1-Math.abs(satSum/px-0.42)/0.55),
+        resolutionScore: longSide>=2400?1:longSide>=1800?0.8:longSide>=1200?0.55:longSide>=800?0.32:0.12,
+        formatOk: /jpe?g|png/i.test(origType||""),
+        approxDpiA4: Math.round(longSide/11.69),
+        lapVar: Math.round(lapVar),
+      });
+    };
+    img.onerror = ()=> resolve(fallbackMetrics(origW,origH,origType));
+    img.src = dataUrl;
+  });
+}
+function fallbackMetrics(W,H,type){
+  const longSide=Math.max(W||0,H||0)||1200;
+  return { W:W||0,H:H||0,longSide, sharpNorm:0.5,edgeNorm:0.5,contrastNorm:0.5,clipFrac:0.05,meanSat:0.4,satReasonable:0.7,
+    resolutionScore: longSide>=2400?1:longSide>=1800?0.8:longSide>=1200?0.55:0.3,
+    formatOk:/jpe?g|png/i.test(type||""), approxDpiA4:Math.round(longSide/11.69), lapVar:0 };
+}
+
+/* =========================================================================
+   상태 & 저장
+   ========================================================================= */
+const LS_KEY = "able-ai-jury-v3";
+let state = { entries:[], view:"dashboard", editing:null, judge:"", settings:{ scoreFormat:false }, imagesPersisted:true, storageOk:true };
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const p=JSON.parse(raw);
+      if(p&&Array.isArray(p.entries)) state.entries=p.entries;
+      if(p&&p.judge) state.judge=p.judge;
+      if(p&&p.settings) state.settings={ ...state.settings, ...p.settings };
+    }
+  }catch(e){ console.warn(e); }
+}
+let _persistWarned=false;
+function persist(){
+  const payload = { entries:state.entries, judge:state.judge, settings:state.settings, savedAt:new Date().toISOString() };
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(payload)); state.imagesPersisted=true; state.storageOk=true; }
+  catch(e){
+    try{
+      localStorage.setItem(LS_KEY, JSON.stringify({ ...payload, entries: state.entries.map(en=>({ ...en, image:null, formImage:null })) }));
+      state.imagesPersisted=false; state.storageOk=true;
+      if(!_persistWarned){ _persistWarned=true; toast("이미지가 많아 이미지는 저장 제외됩니다. 정기적으로 백업(JSON)하세요."); }
+    }catch(e2){
+      state.storageOk=false;
+      if(!_persistWarned){ _persistWarned=true; toast("이 환경에서는 자동 저장이 안 됩니다. 작업 후 백업(JSON)으로 내려받으세요."); }
+    }
+  }
+}
+let _pt; function schedulePersist(){ clearTimeout(_pt); _pt=setTimeout(persist,500); }
+
+function uid(){ return "e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),2600); }
+
+/* window.confirm 은 일부 환경(샌드박스 iframe 등)에서 동작하지 않으므로 자체 모달 사용 */
+function confirmModal(msg, opts){
+  opts = opts || {};
+  return new Promise(resolve=>{
+    const ov = document.createElement("div");
+    ov.className = "modal-ov";
+    ov.innerHTML = `<div class="modal-card" role="alertdialog" aria-modal="true">
+      <p>${esc(msg).replace(/\n/g,"<br>")}</p>
+      <div class="modal-btns">
+        <button class="btn ghost" data-x="0">${esc(opts.cancelText||"취소")}</button>
+        <button class="btn ${opts.danger?"danger":"primary"}" data-x="1">${esc(opts.okText||"확인")}</button>
+      </div></div>`;
+    document.body.appendChild(ov);
+    function close(v){ document.removeEventListener("keydown",onKey); ov.remove(); resolve(v); }
+    function onKey(e){ if(e.key==="Escape") close(false); else if(e.key==="Enter") close(true); }
+    ov.addEventListener("click",e=>{
+      if(e.target===ov){ close(false); return; }
+      const b=e.target.closest("[data-x]"); if(b) close(b.dataset.x==="1");
+    });
+    document.addEventListener("keydown",onKey);
+    const ok=ov.querySelector('[data-x="1"]'); if(ok) ok.focus();
+  });
+}
+function blankEntry(){
+  const scores={}, confirmed={}, tier={}; CRITERIA.forEach(c=>{ scores[c.id]=null; confirmed[c.id]=false; });
+  TIER_IDS.forEach(id=>tier[id]="mid");
+  return { id:uid(), no:String(state.entries.length+1).padStart(2,"0"), title:"", theme:"", ai:"", madeDate:"", size:"",
+    prompt:"", desc:"", image:null, imageInfo:"", imgMetrics:null, formImage:null, formImageInfo:"", ocrText:"",
+    scores, confirmed, tier, auto:null, pa:null, aiJudge:null, verdict:null,
+    basis:"", notes:"", status:"draft", updatedAt:Date.now() };
+}
+function totalOf(en){ return CRITERIA.reduce((s,c)=>s+(typeof en.scores[c.id]==="number"?en.scores[c.id]:0),0); }
+function isScored(en){ return CRITERIA.every(c=>typeof en.scores[c.id]==="number"); }
+function needCount(en){ return TIER_IDS.filter(id=>!en.confirmed[id]).length; }
+function upsert(en){ const i=state.entries.findIndex(x=>x.id===en.id); if(i>=0) state.entries[i]=en; else state.entries.push(en); }
+function renumber(){ state.entries.forEach((e,i)=>{ if(/^\d+$/.test(e.no)) e.no=String(i+1).padStart(2,"0"); }); }
+function rankedList(){
+  return state.entries.filter(e=>e.status!=="hold" && isScored(e)).sort((a,b)=>{
+    if(totalOf(b)!==totalOf(a)) return totalOf(b)-totalOf(a);
+    for(const cid of ["A","B","C","E"]){ const d=(b.scores[cid]||0)-(a.scores[cid]||0); if(d) return d; }
+    return 0;
+  });
+}
+function awardOf(rank){ return rank===1?"1위":rank===2?"2위":rank===3?"3위":(rank<=23?"입선":"—"); }
+
+function readImageFile(file){
+  return new Promise((resolve,reject)=>{
+    if(!file.type.startsWith("image/")){ reject(new Error(file.name+" — 이미지 파일이 아닙니다.")); return; }
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const oW=img.naturalWidth,oH=img.naturalHeight;
+        const MAX=1400,sc=Math.min(1,MAX/Math.max(oW,oH));
+        const cw=Math.round(oW*sc),ch=Math.round(oH*sc);
+        const cv=document.createElement("canvas"); cv.width=cw; cv.height=ch;
+        cv.getContext("2d").drawImage(img,0,0,cw,ch);
+        let dataUrl; try{ dataUrl=cv.toDataURL("image/jpeg",0.85); }catch(e){ dataUrl=fr.result; }
+        resolve({ dataUrl,oW,oH,type:file.type,name:file.name, info:`${oW}×${oH}px · ${(file.size/1024).toFixed(0)}KB · ${file.name}` });
+      };
+      img.onerror=()=>reject(new Error(file.name+" — 이미지를 열 수 없습니다."));
+      img.src=fr.result;
+    };
+    fr.onerror=()=>reject(new Error(file.name+" — 파일을 읽을 수 없습니다."));
+    fr.readAsDataURL(file);
+  });
+}
+async function attachImage(en,file){
+  const r=await readImageFile(file);
+  en.image=r.dataUrl; en.imageInfo=r.info;
+  en.imgMetrics=await analyzeImage(r.dataUrl,r.oW,r.oH,r.type);
+  if(!en.title) en.title=r.name.replace(/\.[a-z0-9]+$/i,"");
+  en.updatedAt=Date.now();
+}
+/* 신청서(HWP) 캡처 이미지 — OCR 가독성을 위해 조금 더 크게 보관 */
+function readFormFile(file){
+  return new Promise((resolve,reject)=>{
+    if(!file.type.startsWith("image/")){ reject(new Error("이미지 파일이 아닙니다.")); return; }
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const oW=img.naturalWidth,oH=img.naturalHeight;
+        const MAX=2000,sc=Math.min(1,MAX/Math.max(oW,oH));
+        const cw=Math.max(1,Math.round(oW*sc)),ch=Math.max(1,Math.round(oH*sc));
+        const cv=document.createElement("canvas"); cv.width=cw; cv.height=ch;
+        cv.getContext("2d").drawImage(img,0,0,cw,ch);
+        let dataUrl; try{ dataUrl=cv.toDataURL("image/jpeg",0.9); }catch(e){ dataUrl=fr.result; }
+        resolve({ dataUrl, info:`${oW}×${oH}px · ${(file.size/1024).toFixed(0)}KB` });
+      };
+      img.onerror=()=>reject(new Error("이미지를 열 수 없습니다."));
+      img.src=fr.result;
+    };
+    fr.onerror=()=>reject(new Error("파일을 읽을 수 없습니다."));
+    fr.readAsDataURL(file);
+  });
+}
+async function attachFormImage(en,file){
+  const r=await readFormFile(file);
+  en.formImage=r.dataUrl; en.formImageInfo=r.info; en.updatedAt=Date.now();
+}
+
+/* ---------- 신청서 캡처 OCR (선택 · 인터넷 필요, 결과지/자동저장과 무관) ---------- */
+let _tessLoading=null;
+function ensureTesseract(){
+  if(window.Tesseract) return Promise.resolve(window.Tesseract);
+  if(_tessLoading) return _tessLoading;
+  _tessLoading = new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+    s.onload=()=>window.Tesseract?res(window.Tesseract):rej(new Error("OCR 로드 실패"));
+    s.onerror=()=>rej(new Error("OCR 라이브러리를 불러올 수 없습니다 (인터넷 연결 확인, 또는 로컬 파일에서 실행)."));
+    document.head.appendChild(s);
+  });
+  return _tessLoading;
+}
+async function ocrRecognize(dataUrl, onProg){
+  const T = await ensureTesseract();
+  const { data } = await T.recognize(dataUrl, "kor+eng", {
+    logger: mm=>{ if(mm.status==="recognizing text" && onProg) onProg(Math.round(mm.progress*100)); }
+  });
+  return (data && data.text ? data.text : "").trim();
+}
+/* OCR 원문에서 라벨 기준으로 주제/설명/프롬프트 추출 (best-effort) */
+function parseFormText(txt){
+  const t = (txt||"").replace(/\r/g,"");
+  const seg = (startPats, stopPats)=>{
+    for(const sp of startPats){
+      const re = new RegExp(sp+"[\\s:)\\]]*\\n?([\\s\\S]*?)(?=(?:"+stopPats.join("|")+")|$)","i");
+      const m = t.match(re);
+      if(m && m[1] && m[1].replace(/\s/g,"").length>2) return m[1].trim().replace(/[ \t]+/g," ").replace(/\n{2,}/g,"\n");
+    }
+    return "";
+  };
+  const STOPS = ["작품\\s*주제","작품\\s*설명","사용\\s*AI\\s*프로그램","작품\\s*제작일","작품\\s*규격","작품\\s*제작\\s*과정",
+    "AI\\s*프로그램에\\s*입력","입력한\\s*주요","명령어","프롬프트","참가\\s*신청서","굵은\\s*테두리","※"];
+  return {
+    theme: seg(["작품\\s*주제"], STOPS.filter(s=>!/주제/.test(s))),
+    desc:  seg(["작품\\s*설명"], STOPS.filter(s=>!/설명/.test(s))),
+    prompt: seg(["입력한\\s*주요\\s*내용[^\\n]*","명령어[^\\n]*프롬프트[^\\n]*","프롬프트"], ["※","작성해\\s*주세요","참가\\s*신청서","\\n\\s*\\n\\s*\\n"]),
+  };
+}
+
+/* =========================================================================
+   렌더
+   ========================================================================= */
+const viewEl = document.getElementById("view");
+function render(){
+  document.querySelectorAll("#nav button").forEach(b=>b.setAttribute("aria-current",String(b.dataset.view===state.view)));
+  ({dashboard:renderDashboard, editor:renderEditor, ranking:renderRanking, result:renderResult, help:renderHelp}[state.view]||renderDashboard)();
+  window.scrollTo({top:0});
+}
+function go(v){ state.view=v; if(v!=="editor") state.editing=null; render(); }
+document.getElementById("nav").addEventListener("click",e=>{ const b=e.target.closest("button[data-view]"); if(b) go(b.dataset.view); });
+
+/* ---------- 대시보드 ---------- */
+function renderDashboard(){
+  const list=state.entries;
+  const done=list.filter(e=>e.status==="done").length;
+  const auto=list.filter(e=>e.status==="auto").length;
+  const hold=list.filter(e=>e.status==="hold").length;
+  const draft=list.length-done-auto-hold;
+  const pct=list.length?Math.round(done/list.length*100):0;
+  const scorable=list.filter(e=>e.image && (e.prompt||"").trim().length>1 && e.status!=="hold").length;
+
+  let cards;
+  if(!list.length){
+    cards=`<div class="empty"><h3>출품작 23점을 등록해 자동 채점을 시작하세요</h3>
+      <p>적격성 심사를 통과한 작품들입니다. 이미지를 한 번에 올리고 신청서의 프롬프트·설명을 붙여넣으면<br>
+      D·F는 자동 채점, A·B·C·E는 AI가 상/중/하로 1차 판단합니다.</p>
+      <div class="row" style="justify-content:center;margin-top:1rem">
+        <button class="btn primary" id="multiAdd2">＋ 이미지 여러 장 추가</button>
+        <button class="btn ghost" id="addOne2">＋ 한 점씩</button>
+      </div></div>`;
+  }else{
+    cards=`<div class="cards">`+list.map(en=>{
+      const t=totalOf(en), scored=isScored(en), gr=scored?gradeOf(t).g:"–", need=needCount(en);
+      const st=en.status==="done"?`<span class="pill done">확정</span>`
+             :en.status==="hold"?`<span class="pill hold">보류</span>`
+             :en.status==="auto"?`<span class="pill auto">AI 1차</span>`
+             :`<span class="pill draft">미입력</span>`;
+      return `<button class="card" data-edit="${en.id}">
+        <div class="top"><span class="no">No. ${esc(en.no)}</span>${st}</div>
+        ${en.image?`<img class="thumb" src="${en.image}" alt="">`:`<div class="thumb ph">🖼️</div>`}
+        <div class="title">${esc(en.title)||"(제목 없음)"}</div>
+        <div class="foot"><span class="score-big">${scored?t:"–"}<small> / ${MAX_TOTAL}</small></span>
+          <span class="row" style="gap:.3rem">${(en.status!=="done"&&need)?`<span class="needbadge">확인 ${need}</span>`:""}<span class="grade ${gr}">${gr}</span></span></div>
+      </button>`;
+    }).join("")+`</div>`;
+  }
+
+  viewEl.innerHTML=`
+    <div class="dash-head">
+      <div><h1>대시보드</h1><p>적격성 통과작 23점을 A~F 100점으로 채점합니다. 데이터는 이 브라우저에만 저장됩니다.</p></div>
+    </div>
+    <div class="actionbar no-print">
+      <button class="btn primary" id="multiAdd">＋ 이미지 여러 장 추가</button>
+      <button class="btn" id="addOne">＋ 한 점씩</button>
+      <button class="btn" id="autoAll" ${scorable?"":"disabled"}>⚙ 전체 자동 채점 (${scorable})</button>
+      <button class="btn" id="confirmAll" ${auto?"":"disabled"}>✓ AI 1차 결과 전체 확정 (${auto})</button>
+      <span style="flex:1"></span>
+      <button class="btn ghost sm" id="expCsv">CSV</button>
+      <button class="btn ghost sm" id="expJson">백업</button>
+      <button class="btn ghost sm" id="impJson">복원</button>
+      <button class="btn ghost sm danger" id="resetAll">전체 초기화</button>
+    </div>
+    <div class="progress">
+      <div class="row" style="justify-content:space-between"><b>진행 현황</b>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--ink-soft)">확정 ${done} / ${list.length} · ${pct}%</span></div>
+      <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="legend">
+        <span>확정 <b>${done}</b></span><span>AI 1차 <b>${auto}</b></span><span>보류 <b>${hold}</b></span><span>미입력 <b>${draft}</b></span>
+        ${state.storageOk?"":`<span style="color:var(--fail)">⚠ 자동 저장 불가 — 백업 필수</span>`}
+        ${(state.storageOk&&!state.imagesPersisted)?`<span style="color:var(--caution)">이미지는 저장 제외</span>`:""}
+      </div>
+      <label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--line);font-size:.82rem;color:var(--ink-soft);cursor:pointer">
+        <input type="checkbox" id="setFmt" ${state.settings.scoreFormat?"checked":""} style="margin-top:.2rem">
+        <span>이미지 규격·해상도를 점수(F·C)에 반영
+          <span style="display:block;color:var(--ink-faint);font-size:.76rem">제출 형식(이미지/원본)은 선택 사항이라 <b>기본은 미반영</b>입니다. 켜면 저해상도 제출작이 F·C에서 감점됩니다. 변경 시 '전체 자동 채점'을 다시 실행하세요.</span>
+        </span>
+      </label>
+    </div>
+    ${cards}
+    <input type="file" id="multiFile" accept="image/*" multiple hidden>
+    <input type="file" id="jsonFile" accept="application/json" hidden>`;
+
+  const addOne=()=>{ state.editing=blankEntry(); state.view="editor"; render(); };
+  const multi=()=>viewEl.querySelector("#multiFile").click();
+  ["#addOne","#addOne2"].forEach(s=>viewEl.querySelector(s)?.addEventListener("click",addOne));
+  ["#multiAdd","#multiAdd2"].forEach(s=>viewEl.querySelector(s)?.addEventListener("click",multi));
+  viewEl.querySelector("#multiFile").addEventListener("change",onMultiFiles);
+  viewEl.querySelector("#autoAll")?.addEventListener("click",runAutoAll);
+  viewEl.querySelector("#confirmAll")?.addEventListener("click",confirmAll);
+  viewEl.querySelector("#resetAll")?.addEventListener("click",resetAll);
+  viewEl.querySelector("#setFmt")?.addEventListener("change",e=>{
+    state.settings.scoreFormat=e.target.checked; persist();
+    toast(e.target.checked?"규격·해상도를 점수에 반영합니다. '전체 자동 채점'을 다시 실행하세요."
+                          :"규격·해상도를 점수에서 제외했습니다. '전체 자동 채점'을 다시 실행하세요.");
+  });
+  viewEl.querySelector("#expCsv").addEventListener("click",exportCsv);
+  viewEl.querySelector("#expJson").addEventListener("click",exportJson);
+  viewEl.querySelector("#impJson").addEventListener("click",()=>viewEl.querySelector("#jsonFile").click());
+  viewEl.querySelector("#jsonFile").addEventListener("change",importJson);
+  viewEl.querySelectorAll("[data-edit]").forEach(c=>c.addEventListener("click",()=>{
+    const en=state.entries.find(x=>x.id===c.dataset.edit);
+    if(en){ state.editing=JSON.parse(JSON.stringify(en)); state.view="editor"; render(); }
+  }));
+}
+async function onMultiFiles(e){
+  const files=[...e.target.files]; e.target.value="";
+  if(!files.length) return;
+  toast(`이미지 ${files.length}장 분석 중…`);
+  let n=0;
+  for(const f of files){
+    const en=blankEntry();
+    try{ await attachImage(en,f); }catch(err){ toast(err.message); continue; }
+    upsert(en); n++; if(n%3===0) renderDashboard();
+  }
+  renumber(); persist(); renderDashboard();
+  toast(`${n}장 추가 완료. 각 작품에 프롬프트·설명을 붙여넣고 '전체 자동 채점'을 누르세요.`);
+}
+async function runAutoAll(){
+  const targets=state.entries.filter(e=>e.image&&(e.prompt||"").trim().length>1&&e.status!=="hold");
+  if(!targets.length){ toast("이미지와 프롬프트를 먼저 입력하세요."); return; }
+  toast(`${targets.length}점 자동 채점 중…`);
+  for(const en of targets){
+    if(!en.imgMetrics&&en.image) en.imgMetrics=await analyzeImage(en.image,null,null,"image/jpeg");
+    recomputeAuto(en); upsert(en);
+  }
+  persist(); renderDashboard();
+  toast("자동 채점 완료. 순위·결과지에서 초안을 확인하고 각 작품의 A·B·C·E를 상/중/하로 확정하세요.");
+}
+async function confirmAll(){
+  const autos=state.entries.filter(e=>e.status==="auto");
+  if(!autos.length) return;
+  if(!(await confirmModal(`AI 1차 결과 ${autos.length}점을 검토 없이 그대로 확정합니다.\nA·B(주제·창의성) 상/중/하를 그대로 반영하니 주의하세요.`,{okText:"전체 확정"}))) return;
+  autos.forEach(en=>{ CRITERIA.forEach(c=>en.confirmed[c.id]=true); en.status="done"; en.updatedAt=Date.now(); });
+  persist(); renderDashboard(); toast(`${autos.length}점 확정 완료.`);
+}
+async function resetAll(){
+  if(!(await confirmModal("모든 작품과 채점 내용을 삭제하고 처음 상태로 되돌립니다.\n되돌릴 수 없습니다. 계속할까요?",{danger:true,okText:"전체 초기화"}))) return;
+  state.entries=[]; state.editing=null; state.judge="";
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  persist(); go("dashboard"); toast("초기화되었습니다.");
+}
+
+/* ---------- 채점 화면 ---------- */
+function renderEditor(){
+  const en=state.editing;
+  const isNew=!state.entries.some(x=>x.id===en.id);
+  const m=en.imgMetrics, pa=en.pa, J=en.aiJudge;
+
+  const p7html=pa?`<div class="p7">`+Object.entries(pa.p7).map(([k,v])=>`
+    <div class="r"><span>${k}</span><span class="bar"><i style="width:${v==null?0:(v/4*100)}%"></i></span>
+    <span class="n">${v==null?"—":v+"/4"}</span></div>`).join("")+`</div>`:"";
+  const metricsHtml=m?`<div class="metrics">
+    <div class="metric"><div class="k">해상도</div><div class="v ${m.longSide>=2400?'okv':m.longSide>=1500?'':'warnv'}">${m.W}×${m.H}<span style="color:var(--ink-faint)"> · ~${m.approxDpiA4}dpi</span></div></div>
+    <div class="metric"><div class="k">선명도</div><div class="v ${m.sharpNorm>=0.6?'okv':m.sharpNorm<0.4?'warnv':''}">${Math.round(m.sharpNorm*100)}%</div></div>
+    <div class="metric"><div class="k">대비/노출</div><div class="v">${Math.round(m.contrastNorm*100)}% · 클리핑 ${Math.round(m.clipFrac*100)}%</div></div>
+    <div class="metric"><div class="k">파일 형식</div><div class="v ${m.formatOk?'okv':'warnv'}">${m.formatOk?"JPG/PNG ✓":"확인 필요"}</div></div>
+  </div>`:`<p style="font-size:.82rem;color:var(--ink-faint)">이미지를 올리면 자동 분석 결과가 표시됩니다.</p>`;
+
+  const critHtml=CRITERIA.map(c=>{
+    const v=en.scores[c.id], autoV=en.auto?en.auto[c.id]:null, confirmed=en.confirmed[c.id];
+    const isTier=c.mode==="tier";
+    const tag = c.mode==="auto" ? `<span class="autotag a">자동</span>`
+      : (confirmed?`<span class="autotag ok">확정됨</span>`:`<span class="autotag e">AI 1차 · 확인 필요</span>`);
+    const tierBtns = isTier ? `<div class="tiers" data-tier-for="${c.id}">` + ["high","mid","low"].map(tk=>`
+      <button data-tier="${tk}" class="${en.tier[c.id]===tk?'on':''}"><span class="tl">${TIERS[tk].label}</span><span class="tn">${tierRep(c,tk)}</span></button>`).join("") + `</div>` : "";
+    const aic = isTier && J && J[c.id] ? `<div class="aic"><b>AI 판단:</b> ${esc(J[c.id].comment)} → <b>${TIERS[J[c.id].tier].label}</b></div>` : "";
+    const bands=c.bands.map(b=>`<div class="bandrow" data-crit="${c.id}" data-band="${esc(b.r)}">
+      <span class="r">${esc(b.r)}</span><span class="t">${esc(b.t)}</span><span class="d">${esc(b.d)}</span></div>`).join("");
+    return `<div class="crit">
+      <div class="ch"><span class="cid">${c.id}</span><span class="cname">${esc(c.name)}</span><span class="cmax">/ ${c.max}</span>${tag}</div>
+      ${aic}${tierBtns}
+      <div class="sc">
+        ${isTier?`<span class="fineLb">미세 조정</span><button class="adj" data-adj="${c.id}" data-d="-1">−</button>`:""}
+        <input type="number" min="0" max="${c.max}" step="1" value="${v==null?"":v}" data-num="${c.id}" placeholder="–">
+        ${isTier?`<button class="adj" data-adj="${c.id}" data-d="1">＋</button>`:""}
+        <input type="range" min="0" max="${c.max}" step="1" value="${v==null?0:v}" data-range="${c.id}" aria-label="${esc(c.name)} 점수">
+      </div>
+      ${(autoV!=null&&c.mode==="auto")?`<div class="aic">자동 산출값 <b>${autoV}</b> / ${c.max}</div>`:""}
+      <details><summary>${esc(c.hint)}</summary>${bands}</details>
+    </div>`;
+  }).join("");
+
+  const marks = allMatchedTerms(en);
+  const origHtml = `<div class="origbox">
+    ${en.formImage?`<div class="ob"><div class="k">신청서 캡처</div><a href="${en.formImage}" target="_blank" rel="noopener"><img src="${en.formImage}" alt="신청서 캡처" style="width:100%;border-radius:6px;border:1px solid var(--line)"></a></div>`:""}
+    <div class="ob"><div class="k">작품 주제</div><div class="t">${esc(en.theme||"")}</div></div>
+    <div class="ob"><div class="k">프롬프트 원문 (감지 키워드 강조)</div><div class="t">${en.prompt?highlightText(en.prompt,marks):""}</div></div>
+    <div class="ob"><div class="k">작품 설명 원문</div><div class="t">${en.desc?highlightText(en.desc,marks):""}</div></div>
+  </div>`;
+  const ev = en.evidence;
+  let evHtml = `<p style="font-size:.82rem;color:var(--ink-faint)">자동 채점을 실행하면 근거가 표시됩니다.</p>`;
+  if(ev){
+    const det = Object.entries(ev.detected).map(([k,arr])=>`<span class="kchip" title="${esc(BUCKET_KO[k])}">${esc(BUCKET_KO[k])}: ${esc(arr.slice(0,5).join(", "))}</span>`).join("");
+    const miss = ev.missing.map(k=>`<span class="kchip miss">${esc(k)} 없음</span>`).join("");
+    const drows = Object.entries(ev.dPart).map(([k,o])=>`<tr><td class="k">${esc(k)}</td><td class="s">${o.got} / ${o.max}</td><td>${esc(o.why)}</td></tr>`).join("");
+    evHtml = `
+      <div class="chipset"><span class="chipk">프롬프트에서 감지:</span>${det||'<span class="kchip miss">감지된 요소 없음</span>'}</div>
+      <div class="chipset">${miss}</div>
+      <table class="evtable"><tbody>
+        <tr><td class="k">D 프롬프트 역량</td><td class="s">${en.scores.D} / 15</td><td>아래 항목 합산</td></tr>
+        ${drows}
+        <tr><td class="k">F 규정</td><td class="s">${en.scores.F} / 5</td><td>${esc(ev.fPart)}</td></tr>
+        <tr><td class="k">C 완성도(자동분)</td><td class="s">${TIERS[en.tier.C]?TIERS[en.tier.C].label:"-"}</td><td>${esc(ev.cPart)} · 구도·색채는 육안</td></tr>
+        <tr><td class="k">A 주제 표현력</td><td class="s">${TIERS[en.tier.A]?TIERS[en.tier.A].label:"-"}</td><td>${en.aiJudge&&en.aiJudge.A?esc(en.aiJudge.A.comment):""}</td></tr>
+        <tr><td class="k">B 창의성</td><td class="s">${TIERS[en.tier.B]?TIERS[en.tier.B].label:"-"}</td><td>${en.aiJudge&&en.aiJudge.B?esc(en.aiJudge.B.comment):""}</td></tr>
+        <tr><td class="k">E 일치도</td><td class="s">${TIERS[en.tier.E]?TIERS[en.tier.E].label:"-"}</td><td>${en.aiJudge&&en.aiJudge.E?esc(en.aiJudge.E.comment):""}</td></tr>
+      </tbody></table>`;
+  }
+
+  const v=en.verdict;
+  viewEl.innerHTML=`
+    <div class="row no-print" style="justify-content:space-between;margin-bottom:1rem">
+      <button class="btn ghost sm" id="back">← 대시보드</button>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:.74rem;color:var(--ink-faint)">${isNew?"새 작품":"작품 "+esc(en.no)} · 자동 저장됨</span>
+    </div>
+    <div class="ed-grid">
+      <div>
+        <div class="panel">
+          <h3>작품 이미지 <span class="mini">자동 분석</span></h3>
+          <div class="drop" id="drop" tabindex="0" role="button" aria-label="이미지 업로드">
+            <div class="ic">🖼️</div><b>이미지를 업로드하세요</b><small>JPG · PNG · WEBP / 클릭 또는 드래그</small>
+          </div>
+          <input type="file" id="imgFile" accept="image/*" hidden>
+          <div class="preview" id="preview" ${en.image?"":'style="display:none"'}>
+            <img id="pvImg" src="${en.image||""}" alt="">
+            <div class="meta"><span id="pvInfo">${esc(en.imageInfo)}</span></div>
+            <div class="ok">이미지 준비됨 ✓ <button class="btn sm ghost" id="rmImg" style="color:var(--fail)">삭제</button></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>신청서 캡처 <span class="mini">선택 · HWP 화면을 캡처해 첨부</span></h3>
+          <div class="drop" id="formDrop" tabindex="0" role="button" aria-label="신청서 캡처 업로드" style="padding:.9rem">
+            <div class="ic">📄</div><b>${en.formImage?"다른 캡처로 교체":"신청서(HWP) 화면 캡처를 올리세요"}</b>
+            <small>클릭 또는 드래그 · 붙여넣기(Ctrl+V)도 가능</small>
+          </div>
+          <input type="file" id="formFile" accept="image/*" hidden>
+          <div id="formPrev" ${en.formImage?"":'style="display:none"'} style="margin-top:.7rem">
+            <img id="formPvImg" src="${en.formImage||""}" alt="신청서 캡처" style="width:100%;border-radius:8px;border:1px solid var(--line)">
+            <div class="meta" style="font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--ink-soft);margin-top:.35rem"><span id="formPvInfo">${esc(en.formImageInfo)}</span></div>
+            <div class="row" style="margin-top:.5rem">
+              <button class="btn sm no-print" id="ocrBtn">🔎 캡처에서 텍스트 인식</button>
+              <button class="btn sm ghost no-print" id="rmForm" style="color:var(--fail)">캡처 삭제</button>
+            </div>
+            <p style="font-size:.74rem;color:var(--ink-faint);margin:.4rem 0 0">인식은 인터넷 연결이 필요합니다(최초 1회 다운로드). 안 되면 위 캡처를 보면서 아래 칸에 직접 입력하세요.</p>
+          </div>
+          <label class="f" style="margin-top:.7rem ${en.ocrText?'':';display:none'}" id="ocrWrap">
+            <span class="lb">인식된 텍스트 (확인 후 아래 칸으로 나눠 넣기)</span>
+            <textarea data-f="ocrText" rows="5">${esc(en.ocrText||"")}</textarea>
+            <span class="row" style="margin-top:.4rem">
+              <button class="btn sm ghost no-print" data-ocrfill="theme">→ 주제로</button>
+              <button class="btn sm ghost no-print" data-ocrfill="prompt">→ 프롬프트로</button>
+              <button class="btn sm ghost no-print" data-ocrfill="desc">→ 설명으로</button>
+              <button class="btn sm no-print" id="ocrAutoFill">라벨로 자동 분배</button>
+            </span>
+          </label>
+        </div>
+        <div class="panel">
+          <h3>출품작 정보</h3>
+          <div class="two">
+            <label class="f"><span class="lb">작품 번호</span><input type="text" data-f="no" value="${esc(en.no)}"></label>
+            <label class="f"><span class="lb">제작일</span><input type="text" data-f="madeDate" value="${esc(en.madeDate)}" placeholder="2026-00-00"></label>
+          </div>
+          <label class="f"><span class="lb">작품명</span><input type="text" data-f="title" value="${esc(en.title)}"></label>
+          <label class="f"><span class="lb">작품 주제 (신청서)</span><input type="text" data-f="theme" value="${esc(en.theme||"")}" placeholder="예: 나의 꿈 — 우주비행사"></label>
+          <div class="two">
+            <label class="f"><span class="lb">사용 AI 프로그램</span><input type="text" data-f="ai" value="${esc(en.ai)}" placeholder="ChatGPT / DALL·E ..."></label>
+            <label class="f"><span class="lb">작품 규격</span><input type="text" data-f="size" value="${esc(en.size)}" placeholder="A4 / A3"></label>
+          </div>
+          <label class="f"><span class="lb">AI에 입력한 프롬프트 (신청서에서 붙여넣기)</span>
+            <textarea data-f="prompt" rows="5">${esc(en.prompt)}</textarea><span class="cnt" id="cntP"></span></label>
+          <label class="f"><span class="lb">작품 설명</span>
+            <textarea data-f="desc" rows="4">${esc(en.desc)}</textarea><span class="cnt" id="cntD"></span></label>
+          <button class="btn sm primary no-print" id="analyzeBtn">⚙ 이 작품 자동 채점</button>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <h3>원문 확인 <span class="mini">채점 중 참고</span></h3>
+          ${origHtml}
+        </div>
+        <div class="panel">
+          <h3>자동 분석 결과 <span class="mini">${pa?"프롬프트 7항목(0~4) · 이미지 지표":"미실행"}</span></h3>
+          ${metricsHtml}${p7html}
+        </div>
+        <div class="panel">
+          <h3>채점 근거 <span class="mini">감지 요소 · 점수 계산 과정</span></h3>
+          ${evHtml}
+        </div>
+        <div class="panel">
+          <h3>채점 <span class="mini">D·F 자동 / A·B·C·E 상·중·하 + 조정</span></h3>
+          ${critHtml}
+        </div>
+        <div class="panel">
+          <h3>판단문 <span class="mini">자동 생성 · 수정 가능</span></h3>
+          <label class="f"><span class="lb">총평</span><textarea data-f="vSummary" rows="5">${esc(v?v.summary:"")}</textarea></label>
+          <div class="two">
+            <label class="f"><span class="lb">잘한 점</span><textarea data-f="vGood" rows="5">${esc(v?v.good.join("\n"):"")}</textarea></label>
+            <label class="f"><span class="lb">개선할 점</span><textarea data-f="vImprove" rows="5">${esc(v?v.improve.join("\n"):"")}</textarea></label>
+          </div>
+          <label class="f"><span class="lb">특이사항 · 보류 사유</span><textarea data-f="notes" rows="2">${esc(en.notes)}</textarea></label>
+        </div>
+      </div>
+    </div>
+    <div class="summary-box no-print">
+      <span class="tot" id="liveTot">0<small> / ${MAX_TOTAL}</small></span>
+      <span class="gr" id="liveGr">–</span>
+      <span id="liveMsg" style="font-size:.82rem;color:var(--ink-soft)"></span>
+      <span class="sp">
+        ${isNew?"":'<button class="btn danger sm" id="delBtn">삭제</button>'}
+        <button class="btn ghost" id="cancelBtn">취소</button>
+        <button class="btn" id="holdBtn">보류</button>
+        <button class="btn primary" id="saveBtn">확정 저장</button>
+      </span>
+    </div>`;
+
+  wireEditor(en,isNew);
+  syncSummary();
+}
+
+function wireEditor(en,isNew){
+  const q=s=>viewEl.querySelector(s);
+  viewEl.querySelectorAll("[data-f]").forEach(el=>el.addEventListener("input",()=>{
+    const f=el.dataset.f;
+    if(f==="vSummary"){ en.verdict=en.verdict||{}; en.verdict.summary=el.value; }
+    else if(f==="vGood"){ en.verdict=en.verdict||{}; en.verdict.good=el.value.split("\n"); }
+    else if(f==="vImprove"){ en.verdict=en.verdict||{}; en.verdict.improve=el.value.split("\n"); }
+    else en[f]=el.value;
+    en.updatedAt=Date.now(); upsert(en); schedulePersist();
+    if(f==="prompt"||f==="desc") counts();
+  }));
+  function counts(){ q("#cntP").textContent=(en.prompt||"").length+"자"; q("#cntD").textContent=(en.desc||"").length+"자"; }
+  counts();
+
+  function tagFor(id){
+    const wrap=[...viewEl.querySelectorAll(".crit")][CRITERIA.findIndex(c=>c.id===id)];
+    return wrap && wrap.querySelector(".autotag");
+  }
+  function markTag(id){
+    const c=CRITERIA.find(x=>x.id===id); if(c.mode!=="tier") return;
+    const t=tagFor(id); if(!t) return;
+    const ok=en.confirmed[id];
+    t.className="autotag "+(ok?"ok":"e"); t.textContent=ok?"확정됨":"AI 1차 · 확인 필요";
+  }
+  function syncTierBtns(id){
+    const grp=viewEl.querySelector(`[data-tier-for="${id}"]`); if(!grp) return;
+    grp.querySelectorAll("[data-tier]").forEach(b=>b.classList.toggle("on", b.dataset.tier===en.tier[id]));
+  }
+
+  CRITERIA.forEach(c=>{
+    const range=viewEl.querySelector(`[data-range="${c.id}"]`), num=viewEl.querySelector(`[data-num="${c.id}"]`);
+    function set(val,from){
+      let v = val==="" ? null : clampN(Math.round(Number(val)||0),0,c.max);
+      en.scores[c.id]=v;
+      if(from!=="range") range.value=v==null?0:v;
+      if(from!=="num") num.value=v==null?"":v;
+      if(c.mode==="tier"){
+        if(v!=null) en.tier[c.id]=tierFromValue(c,v);
+        if(from!=="init"){ en.confirmed[c.id]=true; markTag(c.id); }
+        syncTierBtns(c.id);
+      }
+      en.updatedAt=Date.now(); upsert(en); schedulePersist(); syncSummary();
+    }
+    range.addEventListener("input",()=>set(range.value,"range"));
+    num.addEventListener("input",()=>set(num.value,"num"));
+  });
+
+  viewEl.querySelectorAll("[data-tier-for]").forEach(grp=>{
+    const id=grp.dataset.tierFor, c=CRITERIA.find(x=>x.id===id);
+    grp.querySelectorAll("[data-tier]").forEach(btn=>btn.addEventListener("click",()=>{
+      const tk=btn.dataset.tier, v=tierRep(c,tk);
+      en.tier[id]=tk; en.scores[id]=v; en.confirmed[id]=true;
+      viewEl.querySelector(`[data-num="${id}"]`).value=v;
+      viewEl.querySelector(`[data-range="${id}"]`).value=v;
+      grp.querySelectorAll("[data-tier]").forEach(b=>b.classList.toggle("on",b===btn));
+      markTag(id); upsert(en); schedulePersist(); syncSummary();
+    }));
+  });
+  viewEl.querySelectorAll("[data-adj]").forEach(btn=>btn.addEventListener("click",()=>{
+    const id=btn.dataset.adj, c=CRITERIA.find(x=>x.id===id), d=parseInt(btn.dataset.d,10);
+    const cur=typeof en.scores[id]==="number"?en.scores[id]:tierRep(c,en.tier[id]);
+    const v=clampN(cur+d,0,c.max);
+    en.scores[id]=v; en.tier[id]=tierFromValue(c,v); en.confirmed[id]=true;
+    viewEl.querySelector(`[data-num="${id}"]`).value=v;
+    viewEl.querySelector(`[data-range="${id}"]`).value=v;
+    const grp=viewEl.querySelector(`[data-tier-for="${id}"]`);
+    grp.querySelectorAll("[data-tier]").forEach(b=>b.classList.toggle("on",b.dataset.tier===en.tier[id]));
+    markTag(id); upsert(en); schedulePersist(); syncSummary();
+  }));
+
+  viewEl.querySelectorAll(".bandrow").forEach(row=>row.addEventListener("click",()=>{
+    const cid=row.dataset.crit, c=CRITERIA.find(x=>x.id===cid);
+    const parts=row.dataset.band.split(/[–-]/).map(x=>parseInt(x,10)).filter(n=>!isNaN(n));
+    const rep=parts.length===2?Math.round((parts[0]+parts[1])/2):parts[0];
+    en.scores[cid]=rep;
+    viewEl.querySelector(`[data-num="${cid}"]`).value=rep;
+    viewEl.querySelector(`[data-range="${cid}"]`).value=rep;
+    if(c.mode==="tier"){
+      en.tier[cid]=tierFromValue(c,rep); en.confirmed[cid]=true; markTag(cid);
+      const grp=viewEl.querySelector(`[data-tier-for="${cid}"]`);
+      grp&&grp.querySelectorAll("[data-tier]").forEach(b=>b.classList.toggle("on",b.dataset.tier===en.tier[cid]));
+    }
+    upsert(en); schedulePersist(); syncSummary(); toast(`${cid}: ${rep}점`);
+  }));
+
+  const drop=q("#drop"), file=q("#imgFile"), pick=()=>file.click();
+  drop.addEventListener("click",pick);
+  drop.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); pick(); }});
+  ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop",e=>{ const f=e.dataTransfer.files[0]; if(f) doImg(f); });
+  file.addEventListener("change",()=>{ if(file.files[0]) doImg(file.files[0]); });
+  async function doImg(f){
+    try{ toast("이미지 분석 중…"); await attachImage(en,f); upsert(en); schedulePersist(); state.editing=en; renderEditor(); }
+    catch(err){ toast(err.message); }
+  }
+  q("#rmImg")?.addEventListener("click",()=>{ en.image=null; en.imageInfo=""; en.imgMetrics=null; upsert(en); schedulePersist(); state.editing=en; renderEditor(); });
+
+  /* ----- 신청서 캡처 + OCR ----- */
+  const fdrop=q("#formDrop"), ffile=q("#formFile");
+  const fpick=()=>ffile.click();
+  fdrop.addEventListener("click",fpick);
+  fdrop.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); fpick(); }});
+  ["dragenter","dragover"].forEach(ev=>fdrop.addEventListener(ev,e=>{ e.preventDefault(); fdrop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev=>fdrop.addEventListener(ev,e=>{ e.preventDefault(); fdrop.classList.remove("over"); }));
+  fdrop.addEventListener("drop",e=>{ const f=e.dataTransfer.files[0]; if(f) doForm(f); });
+  ffile.addEventListener("change",()=>{ if(ffile.files[0]) doForm(ffile.files[0]); });
+  window.__editorPasteHandler = async function(f){ await doForm(f); toast("붙여넣은 이미지를 신청서 캡처로 첨부했습니다."); };
+  async function doForm(f){
+    try{ toast("캡처 첨부 중…"); await attachFormImage(en,f); upsert(en); schedulePersist(); state.editing=en; renderEditor(); }
+    catch(err){ toast(err.message); }
+  }
+  q("#rmForm")?.addEventListener("click",()=>{ en.formImage=null; en.formImageInfo=""; upsert(en); schedulePersist(); state.editing=en; renderEditor(); });
+  q("#ocrBtn")?.addEventListener("click",async()=>{
+    if(!en.formImage){ toast("캡처 이미지를 먼저 올리세요."); return; }
+    const btn=q("#ocrBtn"); btn.disabled=true; btn.textContent="인식 중… 0%";
+    try{
+      const text=await ocrRecognize(en.formImage, p=>{ btn.textContent="인식 중… "+p+"%"; });
+      en.ocrText=text; en.updatedAt=Date.now(); upsert(en); schedulePersist(); state.editing=en; renderEditor();
+      toast(text? "인식 완료. 인식된 텍스트를 확인해 필드로 나눠 넣으세요." : "글자를 찾지 못했습니다. 캡처를 더 선명하게 다시 올려보세요.");
+    }catch(err){ toast(err.message||"인식 실패"); btn.disabled=false; btn.textContent="🔎 캡처에서 텍스트 인식"; }
+  });
+  viewEl.querySelectorAll("[data-ocrfill]").forEach(b=>b.addEventListener("click",()=>{
+    const f=b.dataset.ocrfill, txt=(q('[data-f="ocrText"]').value||"").trim();
+    if(!txt){ toast("인식된 텍스트가 없습니다."); return; }
+    if(f==="theme"){ en.theme=txt.split("\n")[0].slice(0,120); q('[data-f="theme"]').value=en.theme; }
+    else { en[f]=(en[f]?en[f]+"\n":"")+txt; q(`[data-f="${f}"]`).value=en[f]; }
+    upsert(en); schedulePersist(); counts(); toast("옮겼습니다. 필요하면 다듬으세요.");
+  }));
+  q("#ocrAutoFill")?.addEventListener("click",()=>{
+    const txt=(q('[data-f="ocrText"]').value||"");
+    if(!txt.trim()){ toast("인식된 텍스트가 없습니다."); return; }
+    const p=parseFormText(txt);
+    let hit=[];
+    if(p.theme){ en.theme=p.theme.split("\n")[0].slice(0,120); q('[data-f="theme"]').value=en.theme; hit.push("주제"); }
+    if(p.prompt){ en.prompt=p.prompt; q('[data-f="prompt"]').value=en.prompt; hit.push("프롬프트"); }
+    if(p.desc){ en.desc=p.desc; q('[data-f="desc"]').value=en.desc; hit.push("설명"); }
+    upsert(en); schedulePersist(); counts();
+    toast(hit.length? `자동 분배: ${hit.join(", ")}. 반드시 원문과 대조해 확인하세요.` : "라벨을 찾지 못했습니다. 버튼으로 직접 나눠 넣으세요.");
+  });
+
+  q("#analyzeBtn").addEventListener("click",async()=>{
+    if(!en.image){ toast("이미지를 먼저 올리세요."); return; }
+    if(!(en.prompt||"").trim()){ toast("프롬프트를 먼저 입력하세요."); return; }
+    if(!en.imgMetrics) en.imgMetrics=await analyzeImage(en.image,null,null,"image/jpeg");
+    recomputeAuto(en); upsert(en); schedulePersist(); state.editing=en; renderEditor();
+    toast("자동 채점 완료. A·B·C·E 상/중/하를 확정하세요.");
+  });
+
+  q("#back").addEventListener("click",()=>go("dashboard"));
+  q("#cancelBtn").addEventListener("click",()=>{ if(isNew){ state.entries=state.entries.filter(x=>x.id!==en.id); persist(); } go("dashboard"); });
+  q("#saveBtn").addEventListener("click",()=>commit("done"));
+  q("#holdBtn").addEventListener("click",()=>commit("hold"));
+  q("#delBtn")?.addEventListener("click",async()=>{
+    if(await confirmModal("이 작품을 삭제할까요? 되돌릴 수 없습니다.",{danger:true,okText:"삭제"})){
+      state.entries=state.entries.filter(x=>x.id!==en.id);
+      renumber(); persist(); go("dashboard"); toast("삭제되었습니다.");
+    }
+  });
+  async function commit(status){
+    if(status==="done" && !isScored(en) && !(await confirmModal("아직 점수가 비어 있는 항목이 있습니다. 그대로 저장할까요?"))) return;
+    if(status==="done") CRITERIA.forEach(c=>en.confirmed[c.id]=true);
+    en.status=status; en.updatedAt=Date.now(); upsert(en); persist(); go("dashboard");
+    toast(status==="done"?"확정 저장 완료":"보류로 저장");
+  }
+}
+function syncSummary(){
+  const en=state.editing; if(!en) return;
+  const t=totalOf(en), scored=isScored(en), g=gradeOf(t);
+  const el=viewEl.querySelector("#liveTot"); if(!el) return;
+  el.innerHTML=`${t}<small> / ${MAX_TOTAL}</small>`;
+  const grEl=viewEl.querySelector("#liveGr");
+  grEl.textContent=scored?g.g:"–"; grEl.className="gr grade "+(scored?g.g:"");
+  const need=needCount(en);
+  viewEl.querySelector("#liveMsg").textContent=scored?(need?`${g.label} · 확인 필요 ${need}개(A·B·C·E)`:g.label):"미완성 항목 있음";
+}
+
+/* ---------- 순위 ---------- */
+function renderRanking(){
+  const ranked=rankedList();
+  const held=state.entries.filter(e=>e.status==="hold");
+  const pendingNeed=ranked.filter(e=>needCount(e)>0).length;
+  const notAuto=state.entries.filter(e=>e.status==="draft").length;
+  const th=CRITERIA.map(c=>`<th>${c.id}</th>`).join("");
+  const rows=ranked.map((en,i)=>{
+    const rank=i+1, medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":rank, cls=rank<=3?"top":"", mcls=rank<=3?"m"+rank:"";
+    return `<tr class="${cls}"><td class="rk ${mcls}">${medal}</td><td class="n">${esc(en.no)}</td>
+      <td>${esc(en.title)||"(제목 없음)"} ${needCount(en)?`<span class="needbadge">확인 ${needCount(en)}</span>`:""}</td>
+      ${CRITERIA.map(c=>`<td class="n">${en.scores[c.id]}</td>`).join("")}
+      <td class="n"><b>${totalOf(en)}</b></td><td class="n">${gradeOf(totalOf(en)).g}</td><td class="n">${awardOf(rank)}</td></tr>`;
+  }).join("");
+  const heldRows=held.map(en=>`<tr class="held"><td class="rk">보류</td><td class="n">${esc(en.no)}</td>
+    <td>${esc(en.title)||"(제목 없음)"}</td><td colspan="${CRITERIA.length}">${esc(en.notes)||"—"}</td>
+    <td class="n">${isScored(en)?totalOf(en):"–"}</td><td class="n">–</td><td class="n">—</td></tr>`).join("");
+
+  viewEl.innerHTML=`
+    <div class="rank-head"><div><h1>순위</h1>
+      <p style="margin:.3rem 0 0;color:var(--ink-soft);font-size:.9rem">채점 대상 ${ranked.length}점 · 보류 ${held.length}점</p></div>
+      <button class="btn ghost sm no-print" id="printBtn">인쇄</button></div>
+    ${(notAuto||pendingNeed)?`<div class="infobox">
+      ${notAuto?`아직 자동 채점하지 않은 작품 ${notAuto}점 — 대시보드에서 '전체 자동 채점' 실행.<br>`:""}
+      ${pendingNeed?`상위 ${pendingNeed}점은 A·B·C·E가 <b>AI 1차값</b>입니다. 각 작품을 열어 상/중/하를 확정하세요.`:""}
+    </div>`:""}
+    ${ranked.length?`<div class="tw"><table>
+      <thead><tr><th class="rk">순위</th><th>No.</th><th>작품명</th>${th}<th>합계</th><th>등급</th><th>시상</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`:`<div class="empty"><h3>채점된 작품이 없습니다</h3>
+      <p>대시보드에서 이미지·프롬프트 입력 후 '전체 자동 채점'을 실행하세요.</p></div>`}
+    ${heldRows?`<h3 style="margin:1.8rem 0 .6rem;font-size:1.05rem">보류 작품</h3><div class="tw"><table>
+      <thead><tr><th class="rk">상태</th><th>No.</th><th>작품명</th><th colspan="${CRITERIA.length}">사유</th><th>합계</th><th>등급</th><th>시상</th></tr></thead>
+      <tbody>${heldRows}</tbody></table></div>`:""}
+    <p class="note">동점 시 우선순위 ① A 주제 표현력 → ② B 창의성 → ③ C 완성도 → ④ E 일치도.<br>
+      D·F는 자동 확정값, A·B·C·E는 AI 1차 판단(상/중/하) 후 심사위원이 확정한 값입니다.</p>`;
+  viewEl.querySelector("#printBtn")?.addEventListener("click",doPrint);
+}
+
+/* ---------- 결과지 ---------- */
+function renderResult(){
+  const ranked=rankedList();
+  const held=state.entries.filter(e=>e.status==="hold");
+  const pending=ranked.filter(e=>needCount(e)>0).length;
+  const th=CRITERIA.map(c=>`<th>${c.id}</th>`).join("");
+  const sumRows=ranked.map((en,i)=>{
+    const rank=i+1, mcls=rank<=3?"m"+rank:"";
+    return `<tr class="${rank<=3?'top':''}"><td class="rk ${mcls}">${rank}</td><td class="n">${esc(en.no)}</td>
+      <td>${esc(en.title)||"(제목 없음)"}</td>${CRITERIA.map(c=>`<td class="n">${en.scores[c.id]}</td>`).join("")}
+      <td class="n"><b>${totalOf(en)}</b></td><td class="n">${gradeOf(totalOf(en)).g}</td><td class="n">${awardOf(rank)}</td></tr>`;
+  }).join("");
+
+  const sheets=ranked.map((en,i)=>{
+    const rank=i+1, mcls=rank<=3?"m"+rank:"", J=en.aiJudge||{}, v=en.verdict||{good:[],improve:[],summary:""};
+    const srows=CRITERIA.map(c=>{
+      const tierTxt = c.mode==="tier"
+        ? `<span class="tchip ${en.tier[c.id]==='high'?'high':en.tier[c.id]==='mid'?'mid':'low'}">${TIERS[{high:'high',mid:'mid',low:'low'}[en.tier[c.id]]]?TIERS[en.tier[c.id]].label:'-'}</span>`
+        : `<span class="tchip">자동</span>`;
+      const cmt = (c.mode==="tier" && J[c.id]) ? esc(J[c.id].comment)
+        : (c.id==="D"?"프롬프트 자동 분석"
+          : c.id==="F"?(state.settings&&state.settings.scoreFormat?"형식·해상도 반영":"형식·해상도 미반영 (윤리 이슈만)"):"");
+      return `<tr><td class="cc">${c.id}</td><td>${esc(c.name)}</td><td class="cc">${en.scores[c.id]} / ${c.max}</td><td class="cc">${tierTxt}</td><td>${cmt}</td></tr>`;
+    }).join("");
+    const marks = allMatchedTerms(en);
+    const ev = en.evidence;
+    const detHtml = ev ? Object.entries(ev.detected).map(([k,arr])=>`<span class="kchip">${esc(BUCKET_KO[k])}: ${esc(arr.slice(0,5).join(", "))}</span>`).join("")
+      + ev.missing.map(k=>`<span class="kchip miss">${esc(k)} 없음</span>`).join("") : "";
+    return `<div class="rsheet">
+      <div class="rh">
+        <div class="badge ${mcls}">${rank<=3?["🥇","🥈","🥉"][rank-1]:rank}</div>
+        ${en.image?`<img src="${en.image}" alt="">`:""}
+        <div class="meta"><div class="t">${esc(en.title)||"(제목 없음)"}</div>
+          <div class="s">No. ${esc(en.no)} · 주제 "${esc(en.theme||"미기재")}" · ${esc(en.ai)||"AI 미기재"} · ${esc(en.size)||"규격 미기재"} · 시상 ${awardOf(rank)}</div></div>
+        <div class="tot">${totalOf(en)}<span style="font-size:.7rem;color:var(--ink-faint)"> / ${MAX_TOTAL} · ${gradeOf(totalOf(en)).g}급</span></div>
+      </div>
+      <table class="stab"><thead><tr><th>항목</th><th>기준</th><th>점수</th><th>판정</th><th>근거</th></tr></thead><tbody>${srows}</tbody></table>
+      <details class="vt"><summary style="cursor:pointer"><b>원문 · 분석 근거 보기</b></summary>
+        <div class="origbox" style="margin-top:.5rem">
+          <div class="ob"><div class="k">프롬프트 원문 (감지 키워드 강조)</div><div class="t">${en.prompt?highlightText(en.prompt,marks):""}</div></div>
+          <div class="ob"><div class="k">작품 설명 원문</div><div class="t">${en.desc?highlightText(en.desc,marks):""}</div></div>
+        </div>
+        ${detHtml?`<div class="chipset" style="margin-top:.5rem">${detHtml}</div>`:""}
+        ${ev?`<div style="font-size:.78rem;color:var(--ink-soft);margin-top:.3rem">D 계산: ${Object.entries(ev.dPart).map(([k,o])=>`${k} ${o.got}/${o.max}`).join(" · ")} → ${en.scores.D}/15 · F: ${esc(ev.fPart)}</div>`:""}
+      </details>
+      <div class="vt"><b>총평</b><br>${esc(v.summary||"")}</div>
+      <div class="row" style="gap:1.4rem;align-items:flex-start">
+        <div style="flex:1;min-width:12rem"><b class="vt">잘한 점</b><ul>${(v.good||[]).filter(x=>x&&x!=="—").map(x=>`<li>${esc(x)}</li>`).join("")||"<li>—</li>"}</ul></div>
+        <div style="flex:1;min-width:12rem"><b class="vt">개선할 점</b><ul>${(v.improve||[]).filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("")||"<li>—</li>"}</ul></div>
+      </div>
+      ${en.notes?`<div class="vt"><b>특이사항</b><br>${esc(en.notes)}</div>`:""}
+    </div>`;
+  }).join("");
+
+  viewEl.innerHTML=`<div class="result-doc">
+    <div class="rank-head">
+      <div><h1>심사 결과지</h1>
+        <p style="margin:.3rem 0 0;color:var(--ink-soft);font-size:.9rem">「나의 꿈 아트페어 예술제」 · 심사일 2026-09-10 ·
+        심사위원 <input type="text" id="judgeName" value="${esc(state.judge)}" placeholder="이름" style="width:8rem;display:inline-block;padding:.2rem .4rem;font-size:.85rem"></p></div>
+      <div class="row no-print"><button class="btn sm primary" id="saveHtml">📄 HTML로 저장 → PDF</button><button class="btn ghost sm" id="printBtn">이 화면 인쇄</button></div>
+    </div>
+    <div class="infobox no-print">인쇄·PDF가 안 되면 <b>「HTML로 저장」</b>을 누르세요. 저장된 파일을 더블클릭하면 인쇄 창이 자동으로 뜨고, 대상에서 <b>PDF로 저장</b>을 고르면 됩니다. (웹 미리보기에서는 인쇄가 막혀 있어 로컬 파일에서 진행해야 합니다.)</div>
+    ${pending?`<div class="infobox">상위 ${pending}점은 A·B·C·E가 아직 AI 1차값입니다. 확정 후 결과지를 출력하세요.</div>`:""}
+    ${ranked.length?`<div class="tw"><table>
+      <thead><tr><th class="rk">순위</th><th>No.</th><th>작품명</th>${th}<th>합계</th><th>등급</th><th>시상</th></tr></thead>
+      <tbody>${sumRows}</tbody></table></div>
+      <h3 style="margin:2rem 0 .4rem">작품별 판정</h3>${sheets}`
+    :`<div class="empty"><h3>결과가 아직 없습니다</h3><p>대시보드에서 채점을 완료하세요.</p></div>`}
+    <p class="note">D·F는 프롬프트·이미지 자동 분석값, A·B·C·E는 AI 1차 판단(상/중/하)에 심사위원이 확정·조정한 값입니다.
+      최종 순위·시상은 심사위원이 결정합니다.</p>
+  </div>`;
+  const jn=viewEl.querySelector("#judgeName");
+  jn?.addEventListener("input",()=>{ state.judge=jn.value; schedulePersist(); });
+  viewEl.querySelector("#printBtn")?.addEventListener("click",doPrint);
+  viewEl.querySelector("#saveHtml")?.addEventListener("click",saveResultHtml);
+}
+function doPrint(){
+  let ok=false;
+  try{ window.focus(); if(typeof window.print==="function"){ window.print(); ok=true; } }catch(e){ ok=false; }
+  setTimeout(()=>{
+    toast(ok ? "인쇄 창이 안 뜨면 브라우저에서 Ctrl+P (Mac ⌘P)를 누르세요."
+             : "이 화면은 인쇄가 제한됩니다. 'HTML로 저장' 후 그 파일을 열면 인쇄 창이 자동으로 뜹니다.");
+  }, 300);
+}
+function saveResultHtml(){
+  const doc = viewEl.querySelector(".result-doc").cloneNode(true);
+  doc.querySelectorAll(".no-print").forEach(el=>el.remove());
+  const jn = doc.querySelector("#judgeName");
+  if(jn){ const s=document.createElement("span"); s.textContent=state.judge||"________"; jn.replaceWith(s); }
+  doc.querySelectorAll("details").forEach(d=>d.setAttribute("open",""));
+  const css=document.querySelector("style").innerHTML;
+  const html=`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>에이블 AI 예술제 심사 결과지</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>${css}
+body{padding:2rem;max-width:1000px;margin:0 auto;background:#fff;color:#111}
+.result-doc .rank-head{border-bottom:2px solid #111;padding-bottom:.8rem}
+</style></head><body>${doc.outerHTML}
+<script>window.addEventListener("load",function(){setTimeout(function(){try{window.print();}catch(e){}} ,400);});<\/script>
+</body></html>`;
+  download(`에이블AI예술제_심사결과지_${new Date().toISOString().slice(0,10)}.html`, html, "text/html;charset=utf-8");
+  toast("결과지 HTML 저장 — 파일을 열면 인쇄 창이 자동으로 뜹니다 (PDF로 저장 선택).");
+}
+
+/* ---------- 도움말 ---------- */
+function renderHelp(){
+  viewEl.innerHTML=`<div class="prose">
+    <h1>채점 방식</h1>
+    <p>적격성 심사를 통과한 <b>23점</b>을 대상으로 A~F 100점 채점 → 1·2·3위 + 입선 20을 선발합니다. 프롬프트·이미지를 브라우저에서 분석하며 AI API는 호출하지 않습니다. 입력한 내용은 이 브라우저에만 저장됩니다.</p>
+
+    <h3>항목별 채점 (총 100점)</h3>
+    <ul>
+      <li><b>A. 주제 표현력 「나의 꿈」 (25) — AI 상/중/하 + 조정</b>: 설명글의 꿈 서사, 인물·배경과 주제의 연결을 보고 AI가 상/중/하를 제시. 심사위원이 상(≈21)·중(≈15)·하(≈8) 중 선택하고 ± 버튼이나 숫자로 미세 조정.</li>
+      <li><b>B. 창의성·독창성 (20) — AI 상/중/하 + 조정</b>: 클리셰(무지개·별·구름) 사용 빈도, 개인적 서사, 표현 다양성으로 판단.</li>
+      <li><b>C. 조형적 완성도 (20) — AI 상/중/하 + 조정</b>: 선명도·해상도·노출은 자동 측정, 구도·색채 조화는 육안 반영.</li>
+      <li><b>E. 이미지–프롬프트–설명 일치도 (15) — AI 상/중/하 + 조정</b>: 프롬프트 충실도로 1차값. 실제 반영 여부는 심사위원 확인.</li>
+      <li><b>D. 프롬프트 역량 (15) — 자동</b>: 구체성·시각적 표현 지시·구조·스타일 명확성을 키워드·길이·순서로 분석.</li>
+      <li><b>F. 규정 준수 (5) — 자동</b>: 파일 형식(JPG/PNG)·해상도(≈300dpi/A4=긴 변 2400px). 도용·부적절 콘텐츠는 육안 조정.</li>
+    </ul>
+
+    <h3>진행 순서</h3>
+    <ul>
+      <li>① 대시보드 → <b>이미지 여러 장 추가</b>로 23점 업로드 (이미지 자동 분석).</li>
+      <li>② 각 작품에 신청서의 <b>프롬프트·작품 설명</b> 붙여넣기.</li>
+      <li>③ <b>전체 자동 채점</b> → D·F 확정, A·B·C·E는 AI가 상/중/하 1차 판단, 판단문 자동 생성.</li>
+      <li>④ [순위]·[결과지]에서 초안 확인.</li>
+      <li>⑤ 각 작품을 열어 이미지를 보고 A·B·C·E <b>상/중/하 선택 + 점수 조정</b> → 확정 저장.</li>
+      <li>⑥ [결과지] 탭에서 순위표 + 작품별 판정지 인쇄(또는 PDF·HTML 저장).</li>
+    </ul>
+
+    <h3>제출 형식 · 규격 점수</h3>
+    <ul>
+      <li>공고상 제출물은 <b>「작품 이미지 또는 원본」</b>이라 사람마다 해상도가 제각각입니다. 제출 형식은 선택 사항이므로 <b>기본적으로 규격·해상도는 점수(F·C)에 넣지 않습니다.</b> F는 5점에서 시작하고, C는 선명도·노출만 반영합니다.</li>
+      <li>도용·부적절 콘텐츠가 확인되면 F를 수동으로 낮추세요.</li>
+      <li>규격을 평가에 넣어야 하는 상황이면 <b>대시보드 하단 체크박스</b>로 켤 수 있습니다(그 뒤 '전체 자동 채점' 재실행).</li>
+    </ul>
+
+    <h3>신청서 캡처 · 텍스트 인식 (선택)</h3>
+    <ul>
+      <li>HWP 신청서를 하나씩 열어 붙여넣는 대신, 신청서 화면을 <b>캡처한 이미지</b>를 채점 화면의 「신청서 캡처」에 올리면 채점하는 동안 원문을 바로 볼 수 있습니다. (Ctrl+V 붙여넣기도 됩니다.)</li>
+      <li><b>「캡처에서 텍스트 인식」</b>을 누르면 이미지에서 글자를 읽어 「인식된 텍스트」칸에 넣습니다. <b>「라벨로 자동 분배」</b>는 "작품 주제 / 작품 설명 / 명령어(프롬프트)" 라벨을 찾아 각 칸에 나눠 담습니다.</li>
+      <li>인식은 <b>인터넷 연결이 필요</b>하고(최초 1회 언어 데이터 다운로드) 오탈자가 있을 수 있으니, <b>반드시 캡처 원문과 대조해</b> 다듬으세요. 인식이 안 되면 캡처 이미지를 보며 직접 입력하면 됩니다.</li>
+    </ul>
+
+    <h3>근거 확인</h3>
+    <ul>
+      <li>채점 화면에 <b>원문 확인</b> 패널이 있어 신청서 캡처·작품 주제·프롬프트·설명 원문을 채점하면서 바로 볼 수 있습니다. 프롬프트에서 AI가 감지한 키워드는 강조 표시됩니다.</li>
+      <li><b>채점 근거</b> 패널에 감지 요소(대상·배경·색·조명·구도·스타일 등)와 D 점수 계산 과정(항목별 몇 점을 왜 줬는지), F·C의 자동 측정값이 표로 나옵니다.</li>
+      <li>결과지의 각 작품에도 「원문 · 분석 근거 보기」가 포함됩니다.</li>
+    </ul>
+
+    <h3>인쇄 · PDF</h3>
+    <ul>
+      <li>결과지 탭의 <b>「HTML로 저장」</b>이 가장 확실합니다. 저장된 파일을 더블클릭하면 인쇄 창이 자동으로 뜨고, 대상에서 <b>PDF로 저장</b>을 고르면 됩니다.</li>
+      <li>웹 미리보기 화면에서는 브라우저가 인쇄를 막아 「이 화면 인쇄」 버튼이 동작하지 않습니다. 반드시 바탕화면의 HTML 파일을 직접 열어 사용하세요.</li>
+      <li>로컬 파일에서는 「이 화면 인쇄」 또는 Ctrl+P(Mac ⌘P)로 바로 인쇄·PDF 저장이 됩니다.</li>
+    </ul>
+
+    <h3>편향 완화 · 한계</h3>
+    <ul>
+      <li>장애 유형·정도, 성별·연령·지역·종교는 점수에 반영하지 않습니다.</li>
+      <li>배점은 기술적 화려함보다 주제 표현(A)·창의성(B)에 무게를 둡니다.</li>
+      <li>AI 상/중/하는 <b>1차 참고</b>이며, 최종 점수·순위·시상은 심사위원이 확정합니다.</li>
+      <li>이미지가 프롬프트를 실제로 반영했는지(E), 발상이 독창적인지(B)는 기계가 정확히 판단하지 못하므로 육안 확인이 필요합니다.</li>
+      <li>이 파일은 바탕화면에서 직접 열어야 자동 저장·다운로드가 정상 작동합니다.</li>
+    </ul>
+  </div>`;
+}
+
+/* ---------- 내보내기 / 가져오기 ---------- */
+function download(name,text,type){
+  const blob=new Blob([text],{type:type||"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportCsv(){
+  if(!state.entries.length){ toast("내보낼 작품이 없습니다."); return; }
+  const ranked=rankedList(), rankMap=new Map(ranked.map((e,i)=>[e.id,i+1]));
+  const head=["순위","시상","No","작품명","주제","사용AI","상태",...CRITERIA.map(c=>c.id),
+    ...TIER_IDS.map(id=>id+"_판정"),"합계","등급","총평","잘한점","개선할점","프롬프트원문"];
+  const lines=[head.join(",")];
+  state.entries.forEach(en=>{
+    const t=totalOf(en), r=rankMap.get(en.id)||"";
+    const row=[ r, r?awardOf(r):"", en.no, en.title, en.theme||"", en.ai,
+      en.status==="done"?"확정":en.status==="hold"?"보류":en.status==="auto"?"AI1차":"미입력",
+      ...CRITERIA.map(c=>en.scores[c.id]==null?"":en.scores[c.id]),
+      ...TIER_IDS.map(id=>TIERS[en.tier[id]]?TIERS[en.tier[id]].label:""),
+      isScored(en)?t:"", isScored(en)?gradeOf(t).g:"",
+      (en.verdict?.summary||"").replace(/\s+/g," "),
+      (en.verdict?.good||[]).filter(x=>x&&x!=="—").join(" / "),
+      (en.verdict?.improve||[]).filter(Boolean).join(" / "),
+      (en.prompt||"").replace(/\s+/g," ")
+    ].map(v=>{ const s=String(v==null?"":v); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; });
+    lines.push(row.join(","));
+  });
+  download(`에이블AI예술제_채점_${new Date().toISOString().slice(0,10)}.csv`,"﻿"+lines.join("\r\n"),"text/csv;charset=utf-8");
+  toast("CSV 내보냄");
+}
+function exportJson(){
+  download(`에이블AI예술제_백업_${new Date().toISOString().slice(0,10)}.json`,
+    JSON.stringify({entries:state.entries,judge:state.judge,savedAt:new Date().toISOString()},null,2),"application/json");
+  toast("백업 JSON 내보냄");
+}
+function importJson(e){
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=async()=>{
+    try{
+      const p=JSON.parse(fr.result);
+      if(!p||!Array.isArray(p.entries)) throw new Error("형식 오류");
+      if(!(await confirmModal(`백업의 작품 ${p.entries.length}점으로 현재 내용을 대체할까요?`,{okText:"복원"}))){ e.target.value=""; return; }
+      state.entries=p.entries.map(en=>{
+        en.scores=en.scores||{}; en.confirmed=en.confirmed||{}; en.tier=en.tier||{}; if(en.theme==null) en.theme="";
+        CRITERIA.forEach(c=>{ if(!(c.id in en.confirmed)) en.confirmed[c.id]=false; });
+        TIER_IDS.forEach(id=>{ if(!(id in en.tier)) en.tier[id]="mid"; });
+        return en;
+      });
+      state.judge=p.judge||state.judge;
+      persist(); go("dashboard"); toast("복원 완료");
+    }catch(err){ toast("복원 실패: "+err.message); }
+    finally{ e.target.value=""; }
+  };
+  fr.readAsText(f);
+}
+
+window.addEventListener("paste",e=>{
+  if(state.view!=="editor" || !state.editing) return;
+  const tgt=e.target;
+  if(tgt && (tgt.tagName==="TEXTAREA" || tgt.tagName==="INPUT")) return; // 텍스트 붙여넣기는 그대로
+  const it=[...((e.clipboardData&&e.clipboardData.items)||[])].find(x=>x.type&&x.type.startsWith("image/"));
+  if(it && typeof window.__editorPasteHandler==="function"){
+    const f=it.getAsFile(); if(f){ e.preventDefault(); window.__editorPasteHandler(f); }
+  }
+});
+load();
+render();
+</script>
+</body>
+</html>
